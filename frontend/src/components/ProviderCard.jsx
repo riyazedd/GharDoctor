@@ -1,15 +1,25 @@
 import { Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function ProviderCard({ provider, isSelected, isAvailable, onSelect }) {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (isAvailable) {
+      onSelect(provider);
+      navigate(`/provider/${provider._id}`);
+    }
+  };
+
   return (
     <div
-      onClick={() => isAvailable && onSelect(provider)}
-      className={`relative p-4.5 rounded-2xl border flex items-center gap-4 transition-all cursor-pointer ${
+      onClick={handleClick}
+      className={`relative p-4.5 rounded-2xl border flex items-center gap-4 transition-all ${
         !isAvailable
           ? "bg-slate-950/20 border-slate-900/40 opacity-40 cursor-not-allowed"
-          : isSelected
+          : "cursor-pointer " + (isSelected
             ? "bg-cyan-500/5 border-cyan-500/40 shadow-md shadow-cyan-500/2"
-            : "bg-slate-950/40 border-slate-850 hover:border-slate-800"
+            : "bg-slate-950/40 border-slate-850 hover:border-slate-800")
       }`}
     >
       {/* Avatar */}

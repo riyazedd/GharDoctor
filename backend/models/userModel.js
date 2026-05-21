@@ -29,9 +29,9 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
-    citizenshipImg: {
+    profileImg: {
       type: String,
-      required: true,
+      // required: true,
     },
 
     password: {

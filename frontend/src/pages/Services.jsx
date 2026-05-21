@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Filter, ArrowUpDown, ChevronRight } from 'lucide-react';
 import ServiceCard from '../components/ServiceCard';
 
 export default function Services() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [priceSort, setPriceSort] = useState('none');
@@ -12,6 +13,15 @@ export default function Services() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Set category from URL parameter on mount and scroll to top
+  useEffect(() => {
+    const categoryFromURL = searchParams.get('category');
+    if (categoryFromURL) {
+      setSelectedCategory(categoryFromURL);
+    }
+    window.scrollTo(0, 0);
+  }, [searchParams]);
 
   // Fetch categories
   useEffect(() => {

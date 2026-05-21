@@ -10,6 +10,8 @@ export default function Booking() {
   const navigate = useNavigate();
   const location = useLocation();
   const selectedService = location.state?.service || null;
+  const selectedProviderId = location.state?.selectedProviderId || null;
+  const shouldAutoSelectProvider = location.state?.shouldAutoSelectProvider || false;
 
   // Get auth state from localStorage
   const token = localStorage.getItem('token');
@@ -66,18 +68,29 @@ export default function Booking() {
   useEffect(() => {
     if (!activeService) {
       setProviders([]);
+      setSelectedProvider(null);
       return;
     }
 
     const fetchProviders = async () => {
       try {
+        // Always clear selected provider when service changes
+        setSelectedProvider(null);
+        
         const response = await fetch(
           `http://localhost:3000/api/service-providers/category/${activeService.category}`
         );
         if (response.ok) {
           const data = await response.json();
           setProviders(data);
-          setSelectedProvider(null); // Reset selected provider when service changes
+          
+          // Pre-select provider only if explicitly coming from ProviderProfile with shouldAutoSelectProvider flag
+          if (shouldAutoSelectProvider && selectedProviderId) {
+            const preSelectedProvider = data.find(p => p._id === selectedProviderId);
+            if (preSelectedProvider) {
+              setSelectedProvider(preSelectedProvider);
+            }
+          }
         } else {
           console.warn(`Failed to fetch providers: ${response.status}`);
           setProviders([]);
@@ -89,7 +102,7 @@ export default function Booking() {
     };
 
     fetchProviders();
-  }, [activeService]);
+  }, [activeService, selectedProviderId, shouldAutoSelectProvider]);
 
   const handleBookingSubmit = (e) => {
     e.preventDefault();

@@ -6,6 +6,9 @@ import Home from './pages/Home'
 import Services from './pages/Services'
 import Booking from './pages/Booking'
 import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import ProviderProfile from './pages/ProviderProfile'
+import Dashboard from './pages/Dashboard'
 
 function AppContent() {
   const location = useLocation();
@@ -20,10 +23,12 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/services" element={<Services />} />
           <Route path="/booking" element={<Booking />} />
+          <Route path="/provider/:id" element={<ProviderProfile />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/bookings" element={<Home />} />
           <Route path="/admin" element={<Home />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         </Routes>
       </main>
       <Footer />

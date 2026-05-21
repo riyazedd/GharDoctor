@@ -20,7 +20,7 @@ const authUser = asyncHandler(async (req, res) => {
       email: user.email,
       phone: user.phone,
       address: user.address,
-      citizenshipImg: user.citizenshipImg,
+      profileImg: user.profileImg,
       isAdmin: user.isAdmin,
       token: token,
     });
@@ -33,7 +33,7 @@ const authUser = asyncHandler(async (req, res) => {
 // @route   POST /api/users
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password, phone, address, citizenshipImg } = req.body;
+  const { firstName, lastName, email, password, phone, address, profileImg } = req.body;
 
   const userExists = await User.findOne({ email });
 
@@ -49,7 +49,7 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
     phone,
     address,
-    citizenshipImg
+    profileImg
   });
 
   if (user) {
@@ -62,7 +62,7 @@ const registerUser = asyncHandler(async (req, res) => {
       email: user.email,
       phone: user.phone,
       address: user.address,
-      citizenshipImg: user.citizenshipImg,
+      profileImg: user.profileImg,
       isAdmin: user.isAdmin,
       token: token,
     });
@@ -93,7 +93,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
       email: user.email,
       phone: user.phone,
       address: user.address,
-      citizenshipImg: user.citizenshipImg,
+      profileImg: user.profileImg,
       isAdmin: user.isAdmin,
     });
   } else {
@@ -113,7 +113,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     user.email = req.body.email || user.email;
     user.phone = req.body.phone || user.phone;
     user.address = req.body.address || user.address;
-    user.citizenshipImg = req.body.citizenshipImg || user.citizenshipImg;
+    user.profileImg = req.body.profileImg || user.profileImg;
 
     if (req.body.password) {
       user.password = req.body.password;
@@ -128,7 +128,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
       email: updatedUser.email,
       phone: updatedUser.phone,
       address: updatedUser.address,
-      citizenshipImg: updatedUser.citizenshipImg,
+      profileImg: updatedUser.profileImg,
       isAdmin: updatedUser.isAdmin,
     });
   } else {

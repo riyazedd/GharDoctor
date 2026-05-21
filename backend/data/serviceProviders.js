@@ -96,6 +96,21 @@ const serviceProviders = [
     avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=300",
     completedJobs: 187,
   },
+   {
+    firstName: "Sampada",
+    lastName: "Shrestha",
+    email: "sampada@gmail.com",
+    password: bcrypt.hashSync("123456", 10),
+    phone: "9823333333",
+    skill: "Cleaning",
+    experience: 3,
+    availability: true,
+    citizenshipImage: "sampada-citizenship.jpg",
+    rating: 4.7,
+    reviews: 51,
+    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300",
+    completedJobs: 156,
+  },
 ];
 
 export default serviceProviders;

@@ -8,7 +8,7 @@ const users = [
     password: bcrypt.hashSync("123456", 10),
     phone: "9800000000",
     address: "Kathmandu, Nepal",
-    citizenshipImg: "admin-citizenship.jpg",
+    profileImg: "admin-profile.jpg",
     isAdmin: true,
   },
 
@@ -19,7 +19,7 @@ const users = [
     password: bcrypt.hashSync("123456", 10),
     phone: "9811111111",
     address: "Lalitpur, Nepal",
-    citizenshipImg: "ram-citizenship.jpg",
+    profileImg: "ram-profile.jpg",
     isAdmin: false,
   },
 
@@ -30,7 +30,7 @@ const users = [
     password: bcrypt.hashSync("123456", 10),
     phone: "9822222222",
     address: "Bhaktapur, Nepal",
-    citizenshipImg: "sita-citizenship.jpg",
+    profileImg: "sita-profile.jpg",
     isAdmin: false,
   },
 
@@ -41,7 +41,7 @@ const users = [
     password: bcrypt.hashSync("123456", 10),
     phone: "9833333333",
     address: "Pokhara, Nepal",
-    citizenshipImg: "hari-citizenship.jpg",
+    profileImg: "hari-profile.jpg",
     isAdmin: false,
   },
 
@@ -52,7 +52,7 @@ const users = [
     password: bcrypt.hashSync("123456", 10),
     phone: "9844444444",
     address: "Chitwan, Nepal",
-    citizenshipImg: "gita-citizenship.jpg",
+    profileImg: "gita-profile.jpg",
     isAdmin: false,
   },
 ];
