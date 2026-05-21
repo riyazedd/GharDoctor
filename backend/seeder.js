@@ -5,7 +5,7 @@ import connectDb from './config/db.js';
 import users from "./data/users.js";
 import services from "./data/services.js";
 import serviceProviders from "./data/serviceProviders.js";
-import categories from "./data/categories.js";
+import  categories  from "./data/categories.js";
 // import Product from "./models/productModel.js";
 import User from "./models/userModel.js";
 import Service from "./models/serviceModel.js";
@@ -22,6 +22,7 @@ const importData= async ()=>{
         await User.deleteMany();
         await Service.deleteMany();
         await ServiceProvider.deleteMany();
+        await Category.deleteMany();
 
         const createdUser = await User.insertMany(users);
 

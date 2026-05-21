@@ -49,6 +49,28 @@ const serviceProviderSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    avatar: {
+      type: String,
+      default: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300",
+    },
+
+    rating: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: 4.5,
+    },
+
+    reviews: {
+      type: Number,
+      default: 0,
+    },
+
+    completedJobs: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

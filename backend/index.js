@@ -7,6 +7,9 @@ dotenv.config();
 import connectDB from "./config/db.js";
 
 import userRoutes from './routes/userRoutes.js'
+import categoryRoutes from './routes/categoryRoutes.js'
+import serviceRoutes from './routes/serviceRoutes.js'
+import serviceProviderRoutes from './routes/serviceProviderRoutes.js'
 
 
 const port = 3000;
@@ -32,5 +35,8 @@ app.get('/',(req,res)=>{
 })
 
 app.use('/api/users', userRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/service-providers', serviceProviderRoutes);
 
 app.listen(port,()=>console.log(`Server running on port ${port}`));

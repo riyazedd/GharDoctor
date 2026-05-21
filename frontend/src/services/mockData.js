@@ -1,4 +1,4 @@
-const categories = [
+export const categories = [
   {
     categoryName: "Cleaning",
     icon: "Sparkles",
@@ -49,4 +49,38 @@ const categories = [
   },
 ];
 
-export default categories;
+export const services = [
+  {
+    id: 1,
+    serviceName: "Professional Deep Cleaning",
+    category: "Cleaning",
+    description: "Complete home deep cleaning with eco-friendly products",
+    price: 3500,
+    rating: 4.8,
+    duration: "3-4 hours",
+    image: "https://images.unsplash.com/photo-1584622181563-430f63602d4b?w=500&h=300&fit=crop",
+    isAvailable: true,
+  },
+  {
+    id: 2,
+    serviceName: "Emergency Plumbing Repair",
+    category: "Plumbing",
+    description: "24/7 emergency plumbing services for leaks and blockages",
+    price: 2500,
+    rating: 4.9,
+    duration: "1-2 hours",
+    image: "https://images.unsplash.com/photo-1585518419759-fdf0f3a89b54?w=500&h=300&fit=crop",
+    isAvailable: true,
+  },
+  {
+    id: 3,
+    serviceName: "Electrical Wiring & Installation",
+    category: "Electrical",
+    description: "Professional electrical wiring, repairs, and safety checks",
+    price: 4000,
+    rating: 4.7,
+    duration: "2-3 hours",
+    image: "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=500&h=300&fit=crop",
+    isAvailable: true,
+  },
+];

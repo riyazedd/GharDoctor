@@ -11,6 +11,10 @@ const serviceProviders = [
     experience: 5,
     availability: true,
     citizenshipImage: "ramesh-citizenship.jpg",
+    rating: 4.8,
+    reviews: 42,
+    avatar: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=300",
+    completedJobs: 124,
   },
 
   {
@@ -19,10 +23,14 @@ const serviceProviders = [
     email: "suresh@gmail.com",
     password: bcrypt.hashSync("123456", 10),
     phone: "9812222222",
-    skill: "Electrician",
+    skill: "Electrical",
     experience: 4,
     availability: true,
     citizenshipImage: "suresh-citizenship.jpg",
+    rating: 4.9,
+    reviews: 35,
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300",
+    completedJobs: 98,
   },
 
   {
@@ -31,10 +39,14 @@ const serviceProviders = [
     email: "mina@gmail.com",
     password: bcrypt.hashSync("123456", 10),
     phone: "9823333333",
-    skill: "House Cleaning",
+    skill: "Cleaning",
     experience: 3,
     availability: true,
     citizenshipImage: "mina-citizenship.jpg",
+    rating: 4.7,
+    reviews: 51,
+    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300",
+    completedJobs: 156,
   },
 
   {
@@ -47,6 +59,10 @@ const serviceProviders = [
     experience: 6,
     availability: false,
     citizenshipImage: "hari-citizenship.jpg",
+    rating: 4.6,
+    reviews: 29,
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300",
+    completedJobs: 80,
   },
 
   {
@@ -59,6 +75,26 @@ const serviceProviders = [
     experience: 2,
     availability: true,
     citizenshipImage: "sabina-citizenship.jpg",
+    rating: 4.7,
+    reviews: 18,
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300",
+    completedJobs: 37,
+  },
+
+  {
+    firstName: "Priya",
+    lastName: "Sharma",
+    email: "priya@gmail.com",
+    password: bcrypt.hashSync("123456", 10),
+    phone: "9845555555",
+    skill: "Appliance Repair",
+    experience: 7,
+    availability: true,
+    citizenshipImage: "priya-citizenship.jpg",
+    rating: 4.8,
+    reviews: 61,
+    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=300",
+    completedJobs: 187,
   },
 ];
 

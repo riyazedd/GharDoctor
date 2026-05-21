@@ -31,6 +31,18 @@ const serviceSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+
+    rating: {
+      type: Number,
+      default: 4.5,
+      min: 0,
+      max: 5,
+    },
+
+    duration: {
+      type: String,
+      default: '2-3 hours',
+    },
   },
   {
     timestamps: true,
