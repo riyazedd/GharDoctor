@@ -65,10 +65,8 @@ export default function Navbar({ currentView }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo Brand */}
-          <a href="/" className="flex items-center gap-3 cursor-pointer">
-            <div className="p-2.5 bg-linear-to-tr from-cyan-500 to-blue-600 rounded-2xl shadow-lg shadow-cyan-500/20 animate-pulse">
-              <ShieldCheck className="w-6 h-6 text-slate-950 stroke-[2.5]" />
-            </div>
+          <a href="/" className="flex items-center gap-1 cursor-pointer">
+            <img src="logo.png" alt="" className='w-15'/>
             <div>
               <span className="text-xl font-extrabold bg-linear-to-r from-white via-slate-100 to-cyan-400 bg-clip-text text-transparent tracking-tight">
                 Ghar<span className="text-cyan-400">Doctor</span>
