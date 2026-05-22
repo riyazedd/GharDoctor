@@ -1,5 +1,6 @@
 import asyncHandler from "../middleware/asyncHandler.js";
 import ServiceProvider from "../models/serviceProviderModel.js";
+import generateToken from "../utils/generateToken.js";
 
 // @desc    Get all service providers
 // @route   GET /api/service-providers
@@ -128,6 +129,62 @@ export const deleteServiceProvider = asyncHandler(async (req, res) => {
   }
   
   res.status(200).json({ message: 'Service provider deleted successfully' });
+});
+
+// @desc    Register a new service provider
+// @route   POST /api/service-providers/register
+// @access  Public
+export const registerServiceProvider = asyncHandler(async (req, res) => {
+  try {
+    const { firstName, lastName, email, password, phone, skill, experience, availability, citizenshipImage } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !email || !password || !phone || !skill || !citizenshipImage) {
+      return res.status(400).json({ message: 'Please provide all required fields' });
+    }
+
+    // Check if provider already exists
+    const existingProvider = await ServiceProvider.findOne({ email });
+    if (existingProvider) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
+    const provider = new ServiceProvider({
+      firstName,
+      lastName,
+      email,
+      password,
+      phone,
+      skill,
+      experience: experience || 0,
+      citizenshipImage,
+      availability: availability !== undefined ? availability : true,
+    });
+
+    await provider.save();
+
+    // Generate token
+    const token = generateToken(res, provider._id);
+
+    res.status(201).json({
+      _id: provider._id,
+      firstName: provider.firstName,
+      lastName: provider.lastName,
+      email: provider.email,
+      phone: provider.phone,
+      skill: provider.skill,
+      experience: provider.experience,
+      availability: provider.availability,
+      rating: provider.rating,
+      reviews: provider.reviews,
+      completedJobs: provider.completedJobs,
+      isProvider: true,
+      token,
+    });
+  } catch (error) {
+    console.error('Provider registration error:', error);
+    res.status(500).json({ message: error.message || 'Registration failed' });
+  }
 });
 
 // @desc    Toggle provider availability

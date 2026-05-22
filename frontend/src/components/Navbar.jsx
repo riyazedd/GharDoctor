@@ -48,8 +48,12 @@ export default function Navbar({ currentView }) {
     { name: 'Services', href: '/services', icon: Wrench },
   ];
 
-  const authenticatedNav = isAuthenticated
-    ? [...navigation, { name: 'My Bookings', href: '/dashboard', icon: BookOpen }]
+  const authenticatedNav = isAuthenticated && user
+    ? [...navigation, 
+        user.isProvider || user.skill 
+          ? { name: 'Provider Dashboard', href: '/provider-dashboard', icon: BookOpen }
+          : { name: 'My Bookings', href: '/my-bookings', icon: BookOpen }
+      ]
     : navigation;
 
   const handleLogout = () => {

@@ -171,6 +171,16 @@ export default function LoginPage() {
                 Sign Up Now
               </a>
             </p>
+
+            <p className="text-center text-sm text-slate-400 mt-4">
+              Want to provide services?{' '}
+              <a
+                href="/provider-register"
+                className="font-semibold text-emerald-400 hover:underline hover:text-emerald-300"
+              >
+                Join as Expert
+              </a>
+            </p>
           </div>
         </div>
       </div>

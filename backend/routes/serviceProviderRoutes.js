@@ -7,12 +7,14 @@ import {
   updateServiceProvider,
   deleteServiceProvider,
   toggleProviderAvailability,
+  registerServiceProvider,
 } from '../controller/serviceProviderController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Public routes
+// Public routes - register must come before :id route to avoid route collision
+router.post('/register', registerServiceProvider);
 router.get('/', getServiceProviders);
 router.get('/category/:category', getProvidersByCategory);
 router.get('/:id', getServiceProviderById);

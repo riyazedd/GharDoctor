@@ -7,13 +7,16 @@ import Services from './pages/Services'
 import Booking from './pages/Booking'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import ProviderRegisterPage from './pages/ProviderRegisterPage'
 import ProviderProfile from './pages/ProviderProfile'
 import Dashboard from './pages/Dashboard'
+import MyBookings from './pages/MyBookings'
+import ProviderDashboard from './pages/ProviderDashboard'
 
 function AppContent() {
   const location = useLocation();
   const currentView = location.pathname === '/' ? 'home' : location.pathname.slice(1);
-  const hideNavbar = ['/login', '/register'].includes(location.pathname);
+  const hideNavbar = ['/login', '/register', '/provider-register'].includes(location.pathname);
 
   return (
     <>
@@ -25,10 +28,12 @@ function AppContent() {
           <Route path="/booking" element={<Booking />} />
           <Route path="/provider/:id" element={<ProviderProfile />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/bookings" element={<Home />} />
-          <Route path="/admin" element={<Home />} />
+          <Route path="/provider-dashboard" element={<ProviderDashboard />} />
+          <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/provider-register" element={<ProviderRegisterPage />} />
+          <Route path="/admin" element={<Home />} />
         </Routes>
       </main>
       <Footer />
