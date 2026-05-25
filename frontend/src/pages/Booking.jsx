@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import ProviderCard from '../components/ProviderCard';
 import BookingSuccess from '../components/BookingSuccess';
+import { serviceAPI } from '../API';
 
 export default function Booking() {
   const navigate = useNavigate();
@@ -40,13 +41,10 @@ export default function Booking() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/services');
-        if (response.ok) {
-          const data = await response.json();
-          setServices(data);
-          if (!activeService && data.length > 0) {
-            setActiveService(data[0]);
-          }
+        const response = await serviceAPI.getAllServices();
+        setServices(response.data);
+        if (!activeService && response.data.length > 0) {
+          setActiveService(response.data[0]);
         }
       } catch (err) {
         console.error('Error fetching services:', err);

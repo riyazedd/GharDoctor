@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MapPin, Phone, Mail, Briefcase, Award, Clock, CheckCircle, ArrowLeft } from 'lucide-react';
+import { providerAPI } from '../API';
 
 export default function ProviderProfile() {
   const { id } = useParams();
@@ -13,13 +14,8 @@ export default function ProviderProfile() {
     const fetchProvider = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:3000/api/service-providers/${id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setProvider(data);
-        } else {
-          setError('Provider not found');
-        }
+        const response = await providerAPI.getProviderById(id);
+        setProvider(response.data);
       } catch (err) {
         setError(err.message || 'Error fetching provider details');
         console.error('Error:', err);

@@ -15,6 +15,7 @@ const serviceProviders = [
     reviews: 42,
     avatar: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=300",
     completedJobs: 124,
+    isServiceProvider: true,
   },
 
   {
@@ -31,6 +32,7 @@ const serviceProviders = [
     reviews: 35,
     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300",
     completedJobs: 98,
+    isServiceProvider: true,
   },
 
   {
@@ -47,6 +49,7 @@ const serviceProviders = [
     reviews: 51,
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300",
     completedJobs: 156,
+    isServiceProvider: true,
   },
 
   {
@@ -63,6 +66,7 @@ const serviceProviders = [
     reviews: 29,
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300",
     completedJobs: 80,
+    isServiceProvider: true,
   },
 
   {
@@ -79,6 +83,7 @@ const serviceProviders = [
     reviews: 18,
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300",
     completedJobs: 37,
+    isServiceProvider: true,
   },
 
   {
@@ -95,6 +100,7 @@ const serviceProviders = [
     reviews: 61,
     avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=300",
     completedJobs: 187,
+    isServiceProvider: true,
   },
    {
     firstName: "Sampada",
@@ -110,6 +116,7 @@ const serviceProviders = [
     reviews: 51,
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300",
     completedJobs: 156,
+    isServiceProvider: true,
   },
 ];
 

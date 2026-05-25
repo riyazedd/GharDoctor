@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Phone, Users, Briefcase, Award, FileText, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight, Upload } from 'lucide-react';
+import { authAPI, categoryAPI } from '../API';
 
 export default function ProviderRegisterPage() {
   const navigate = useNavigate();
@@ -29,11 +30,8 @@ export default function ProviderRegisterPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/categories');
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data);
-        }
+        const response = await categoryAPI.getAllCategories();
+        setCategories(response.data);
       } catch (err) {
         console.error('Error fetching categories:', err);
       }
@@ -111,42 +109,30 @@ export default function ProviderRegisterPage() {
     setLoading(true);
 
     try {
-      // Send as JSON with base64 image
-      const response = await fetch('http://localhost:3000/api/service-providers/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone,
-          skill: formData.skill,
-          experience: parseInt(formData.experience),
-          availability: formData.availability,
-          citizenshipImage: formData.citizenshipImage,
-        }),
+      // Send provider registration with base64 image
+      const response = await authAPI.registerProvider({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        skill: formData.skill,
+        experience: parseInt(formData.experience),
+        availability: formData.availability,
+        citizenshipImage: formData.citizenshipImage,
       });
 
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || 'Registration failed');
-      }
-
-      const data = await response.json();
+      const data = response.data;
       setSuccess('Registration successful! Logging you in...');
       
-      // Store token and provider info
-      localStorage.setItem('token', data.token);
+      // Store provider info (token is now in HTTP-Only cookie)
       localStorage.setItem('user', JSON.stringify(data));
 
       setTimeout(() => {
         navigate('/');
       }, 2000);
     } catch (err) {
-      setError(err.message || 'Registration failed. Please try again.');
+      setError(err.response?.data?.message || err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }

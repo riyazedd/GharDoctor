@@ -8,7 +8,7 @@ import generateToken from "../utils/generateToken.js";
 export const getServiceProviders = asyncHandler(async (req, res) => {
   const providers = await ServiceProvider.find({}).select('-password');
   // Debug log
-  console.log('All providers in DB:', providers.map(p => ({ name: `${p.firstName} ${p.lastName}`, skill: p.skill, availability: p.availability })));
+  // console.log('All providers in DB:', providers.map(p => ({ name: `${p.firstName} ${p.lastName}`, skill: p.skill, availability: p.availability })));
   res.status(200).json(providers);
 });
 
@@ -184,6 +184,37 @@ export const registerServiceProvider = asyncHandler(async (req, res) => {
   } catch (error) {
     console.error('Provider registration error:', error);
     res.status(500).json({ message: error.message || 'Registration failed' });
+  }
+});
+
+// @desc    Login service provider & get token
+// @route   POST /api/service-providers/login
+// @access  Public
+export const loginServiceProvider = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  const provider = await ServiceProvider.findOne({ email });
+
+  if (provider && (await provider.matchPassword(password))) {
+    const token = generateToken(res, provider._id);
+
+    res.json({
+      _id: provider._id,
+      firstName: provider.firstName,
+      lastName: provider.lastName,
+      email: provider.email,
+      phone: provider.phone,
+      skill: provider.skill,
+      experience: provider.experience,
+      availability: provider.availability,
+      rating: provider.rating,
+      reviews: provider.reviews,
+      completedJobs: provider.completedJobs,
+      isServiceProvider: provider.isServiceProvider,
+      token: token,
+    });
+  } else {
+    res.status(401).json({ message: 'Invalid email or password' });
   }
 });
 

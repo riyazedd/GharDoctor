@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Filter, ArrowUpDown, ChevronRight } from 'lucide-react';
 import ServiceCard from '../components/ServiceCard';
+import { serviceAPI, categoryAPI } from '../API';
 
 export default function Services() {
   const navigate = useNavigate();
@@ -27,11 +28,8 @@ export default function Services() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/categories');
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data);
-        }
+        const response = await categoryAPI.getAllCategories();
+        setCategories(response.data);
       } catch (err) {
         console.error('Error fetching categories:', err);
       }
@@ -44,32 +42,30 @@ export default function Services() {
     const fetchServices = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3000/api/services');
-        if (response.ok) {
-          let data = await response.json();
+        const response = await serviceAPI.getAllServices();
+        let data = response.data;
 
-          // Filter by category
-          if (selectedCategory !== 'All') {
-            data = data.filter(service => service.category === selectedCategory);
-          }
-
-          // Filter by search query
-          if (searchQuery.trim()) {
-            data = data.filter(service =>
-              service.serviceName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              service.description.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-          }
-
-          // Sort by price
-          if (priceSort === 'low-high') {
-            data = [...data].sort((a, b) => a.price - b.price);
-          } else if (priceSort === 'high-low') {
-            data = [...data].sort((a, b) => b.price - a.price);
-          }
-
-          setServices(data);
+        // Filter by category
+        if (selectedCategory !== 'All') {
+          data = data.filter(service => service.category === selectedCategory);
         }
+
+        // Filter by search query
+        if (searchQuery.trim()) {
+          data = data.filter(service =>
+            service.serviceName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            service.description.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+        }
+
+        // Sort by price
+        if (priceSort === 'low-high') {
+          data = [...data].sort((a, b) => a.price - b.price);
+        } else if (priceSort === 'high-low') {
+          data = [...data].sort((a, b) => b.price - a.price);
+        }
+
+        setServices(data);
       } catch (err) {
         setError(err.message);
         console.error('Error fetching services:', err);

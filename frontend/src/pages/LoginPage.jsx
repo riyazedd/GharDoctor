@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, ShieldCheck, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { authAPI } from '../API';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -18,30 +19,47 @@ export default function LoginPage() {
     setSuccess('');
 
     try {
-      const response = await fetch('http://localhost:3000/api/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Invalid email or password');
-      }
-
-      const data = await response.json();
+      // First, try to login as a regular user
+      const userResponse = await authAPI.loginUser(email, password);
+      const data = userResponse.data;
       setSuccess('Login successful! Redirecting...');
       
-      // Store token and user info
+      // Store user info (token is now in HTTP-Only cookie)
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data));
       
       setTimeout(() => {
-        navigate('/');
+        // Check if user is admin and redirect accordingly
+        if (data.isAdmin) {
+          navigate('/admin-dashboard');
+        } else {
+          navigate('/');
+        }
       }, 1000);
-    } catch (err) {
-      setError(err.message || 'Invalid email or password');
+      return;
+    } catch (userErr) {
+      // If regular user login fails, try service provider login
+      try {
+        const providerResponse = await authAPI.loginProvider(email, password);
+        const data = providerResponse.data;
+        setSuccess('Login successful! Redirecting to provider dashboard...');
+        
+        // Store user info (token is now in HTTP-Only cookie)
+        localStorage.setItem('user', JSON.stringify(data));
+        
+        setTimeout(() => {
+          // Redirect to provider dashboard for service providers
+          if (data.isServiceProvider) {
+            navigate('/provider-dashboard');
+          } else {
+            navigate('/');
+          }
+        }, 1000);
+        return;
+      } catch (providerErr) {
+        // If both fail, show error
+        setError('Invalid email or password');
+      }
     } finally {
       setLoading(false);
     }

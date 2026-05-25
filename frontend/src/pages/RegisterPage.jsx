@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Lock, Mail, User, Phone, MapPin, ArrowRight, ShieldCheck, AlertCircle, Upload } from 'lucide-react';
+import { authAPI } from '../API';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -62,42 +63,27 @@ export default function RegisterPage() {
         try {
           const base64Image = reader.result;
           
-          const response = await fetch('http://localhost:3000/api/users', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              firstName: formData.firstName,
-              lastName: formData.lastName,
-              email: formData.email,
-              phone: formData.phone,
-              address: formData.address,
-              password: formData.password,
-              profileImg: base64Image,
-            }),
+          const response = await authAPI.registerUser({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phone: formData.phone,
+            address: formData.address,
+            password: formData.password,
+            profileImg: base64Image,
           });
 
-          const data = await response.json();
-
-          if (!response.ok) {
-            setError(data.message || 'Registration failed');
-            setLoading(false);
-            return;
-          }
-
+          const data = response.data;
           setSuccess('Account created successfully! Redirecting...');
-          // Store token if provided
-          if (data.token) {
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data));
-          }
+          
+          // Store user info (token is now in HTTP-Only cookie)
+          localStorage.setItem('user', JSON.stringify(data));
           
           setTimeout(() => {
             navigate('/');
           }, 1500);
         } catch (err) {
-          setError(err.message || 'Registration failed');
+          setError(err.response?.data?.message || err.message || 'Registration failed');
           setLoading(false);
         }
       };
