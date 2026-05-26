@@ -35,6 +35,10 @@ export const userAPI = {
   getUserById: (id) =>
     API.get(`/api/users/${id}`),
 
+  // Create new user (admin only)
+  createUser: (userData) =>
+    API.post("/api/users", userData),
+
   // Update user profile
   updateUser: (id, userData) =>
     API.put(`/api/users/${id}`, userData),
@@ -53,6 +57,10 @@ export const providerAPI = {
   // Get single provider by ID
   getProviderById: (id) =>
     API.get(`/api/service-providers/${id}`),
+
+  // Create new provider (admin only)
+  createProvider: (providerData) =>
+    API.post("/api/service-providers", providerData),
 
   // Update provider profile
   updateProvider: (id, providerData) =>

@@ -88,9 +88,9 @@ serviceProviderSchema.methods.matchPassword = async function (
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-serviceProviderSchema.pre("save", async function (next) {
+serviceProviderSchema.pre("save", async function () {
   if (!this.isModified("password")) {
-    next();
+    return;
   }
 
   const salt = await bcrypt.genSalt(10);

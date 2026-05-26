@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Users, UserCheck, Briefcase, TrendingUp, Activity, Settings, LogOut, Menu, X } from 'lucide-react';
+import { Users, UserCheck, Briefcase, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { userAPI, providerAPI, serviceAPI } from '../API';
+import AdminSidebar from '../components/AdminSidebar';
+import AdminHeader from '../components/AdminHeader';
+import { AdminLayoutProvider, useAdminLayout } from '../context/AdminLayoutContext';
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const navigate = useNavigate();
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768); // Open on desktop, closed on mobile
+  const { isMobile, sidebarOpen } = useAdminLayout();
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -25,20 +27,6 @@ export default function AdminDashboard() {
 
     // Fetch statistics
     fetchStats();
-
-    // Handle window resize for responsive design
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (mobile) {
-        setSidebarOpen(false); // Close sidebar on mobile
-      } else {
-        setSidebarOpen(true); // Always open sidebar on desktop
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const fetchStats = async () => {
@@ -138,103 +126,11 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex h-screen bg-slate-950 overflow-hidden">
-      {/* Sidebar */}
-      <div
-        className={`${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } ${
-          isMobile ? 'fixed w-64' : 'relative w-64'
-        } bg-slate-900 border-r border-slate-800 transition-all duration-300 top-0 left-0 h-screen z-40`}
-      >
-        {/* Logo */}
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-          {sidebarOpen && (
-            <h1 className="text-lg md:text-xl font-bold text-cyan-400">GharDoctor</h1>
-          )}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-slate-400 hover:text-slate-200 transition-colors md:hidden"
-          >
-            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
-
-        {/* Menu Items */}
-        <nav className="p-3 md:p-2 lg:p-4 space-y-2">
-          <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
-            <Activity className="w-5 h-5 shrink-0" />
-            {sidebarOpen && <span className="text-sm font-medium">Dashboard</span>}
-          </div>
-
-          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors">
-            <Users className="w-5 h-5 shrink-0" />
-            {sidebarOpen && <span className="text-sm">Users</span>}
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors">
-            <UserCheck className="w-5 h-5 shrink-0" />
-            {sidebarOpen && <span className="text-sm">Providers</span>}
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors">
-            <Briefcase className="w-5 h-5 shrink-0" />
-            {sidebarOpen && <span className="text-sm">Services</span>}
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors">
-            <Settings className="w-5 h-5 shrink-0" />
-            {sidebarOpen && <span className="text-sm">Settings</span>}
-          </button>
-        </nav>
-
-        {/* Logout */}
-        <div className="absolute bottom-4 left-4 right-4">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 transition-colors"
-          >
-            <LogOut className="w-5 h-5 shrink-0" />
-            {sidebarOpen && <span className="text-sm">Logout</span>}
-          </button>
-        </div>
-      </div>
-
-      {/* Backdrop for mobile */}
-      {isMobile && sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      <AdminSidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Bar */}
-        <div className="bg-slate-900/50 border-b border-slate-800 p-3 md:p-4 lg:p-6 flex items-center justify-between sticky top-0 z-20">
-          {/* Menu toggle for mobile */}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="md:hidden text-slate-400 hover:text-slate-200 transition-colors mr-3"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-
-          <div className="flex-1">
-            <h2 className="text-xl md:text-2xl font-bold text-slate-100">Admin Dashboard</h2>
-            <p className="text-slate-400 text-xs md:text-sm mt-0.5 md:mt-1">Welcome back, {user?.firstName}!</p>
-          </div>
-
-          <div className="flex items-center gap-2 md:gap-4 ml-2">
-            {/* User info - hidden on mobile */}
-            <div className="hidden md:block text-right">
-              <p className="text-sm font-medium text-slate-100">{user?.firstName} {user?.lastName}</p>
-              <p className="text-xs text-slate-500">{user?.email}</p>
-            </div>
-            <div className="w-8 md:w-10 h-8 md:h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base">
-              {user?.firstName?.charAt(0)}
-            </div>
-          </div>
-        </div>
+        <AdminHeader title="Admin Dashboard" subtitle={`Welcome back, ${user?.firstName}!`} user={user} />
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
@@ -345,5 +241,13 @@ export default function AdminDashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AdminDashboard() {
+  return (
+    <AdminLayoutProvider>
+      <AdminDashboardContent />
+    </AdminLayoutProvider>
   );
 }

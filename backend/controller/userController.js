@@ -185,8 +185,12 @@ const updateUser = asyncHandler(async (req, res) => {
     user.email = req.body.email || user.email;
     user.phone = req.body.phone || user.phone;
     user.address = req.body.address || user.address;
-    user.citizenshipImg = req.body.citizenshipImg || user.citizenshipImg;
+    user.profileImg = req.body.profileImg || user.profileImg;
     user.isAdmin = Boolean(req.body.isAdmin);
+
+    if (req.body.password) {
+      user.password = req.body.password;
+    }
 
     const updatedUser = await user.save();
 
@@ -197,7 +201,7 @@ const updateUser = asyncHandler(async (req, res) => {
       email: updatedUser.email,
       phone: updatedUser.phone,
       address: updatedUser.address,
-      citizenshipImg: updatedUser.citizenshipImg,
+      profileImg: updatedUser.profileImg,
       isAdmin: updatedUser.isAdmin,
     });
   } else {
