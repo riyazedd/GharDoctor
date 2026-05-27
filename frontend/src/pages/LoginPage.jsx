@@ -31,7 +31,7 @@ export default function LoginPage() {
       setTimeout(() => {
         // Check if user is admin and redirect accordingly
         if (data.isAdmin) {
-          navigate('/admin-dashboard');
+          navigate('/admin/dashboard');
         } else {
           navigate('/');
         }

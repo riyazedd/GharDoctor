@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, UserCheck, Briefcase, Settings, LogOut, Menu, X, Activity } from 'lucide-react';
+import { Users, UserCheck, Briefcase, Settings, LogOut, Menu, X, Activity, Tags } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAdminLayout } from '../context/AdminLayoutContext';
 
@@ -17,10 +17,11 @@ export default function AdminSidebar() {
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path);
 
   const menuItems = [
-    { label: 'Dashboard', icon: Activity, path: '/admin-dashboard' },
+    { label: 'Dashboard', icon: Activity, path: '/admin/dashboard' },
     { label: 'Users', icon: Users, path: '/admin/users' },
     { label: 'Providers', icon: UserCheck, path: '/admin/providers' },
     { label: 'Services', icon: Briefcase, path: '/admin/services' },
+    { label: 'Categories', icon: Tags, path: '/admin/categories' },
     { label: 'Settings', icon: Settings, path: '/admin/settings' },
   ];
 

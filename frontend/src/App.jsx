@@ -15,12 +15,14 @@ import ProviderDashboard from './pages/ProviderDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import UserManagement from './pages/UserManagement'
 import ServiceProviderManagement from './pages/ServiceProviderManagement'
+import ServiceManagement from './pages/ServiceManagement'
+import CategoryManagement from './pages/CategoryManagement'
 
 function AppContent() {
   const location = useLocation();
   const currentView = location.pathname === '/' ? 'home' : location.pathname.slice(1);
-  const hideNavbar = ['/login', '/register', '/provider-register', '/admin-dashboard', '/provider-dashboard', '/admin/users', '/admin/providers'].includes(location.pathname);
-  const hideFooter = ['/login', '/register', '/provider-register', '/admin-dashboard', '/provider-dashboard', '/admin/users', '/admin/providers'].includes(location.pathname);
+  const hideNavbar = ['/login', '/register', '/provider-register', '/admin/dashboard', '/provider-dashboard', '/admin/users', '/admin/providers', '/admin/services', '/admin/categories'].includes(location.pathname);
+  const hideFooter = ['/login', '/register', '/provider-register', '/admin/dashboard', '/provider-dashboard', '/admin/users', '/admin/providers', '/admin/services', '/admin/categories'].includes(location.pathname);
 
   return (
     <>
@@ -33,9 +35,11 @@ function AppContent() {
           <Route path="/provider/:id" element={<ProviderProfile />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/provider-dashboard" element={<ProviderDashboard />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<UserManagement />} />
           <Route path="/admin/providers" element={<ServiceProviderManagement />} />
+          <Route path="/admin/services" element={<ServiceManagement />} />
+          <Route path="/admin/categories" element={<CategoryManagement />} />
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />

@@ -1,32 +1,32 @@
 import { useState, useEffect } from 'react';
-import { Edit2, Trash2, Plus, X, Save, Search } from 'lucide-react';
-import { userAPI } from '../API';
+import { Search, Plus, Edit2, Trash2, X, Save } from 'lucide-react';
+import { serviceAPI } from '../API';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminHeader from '../components/AdminHeader';
 import { AdminLayoutProvider, useAdminLayout } from '../context/AdminLayoutContext';
 
-function UserManagementContent() {
-  const [users, setUsers] = useState([]);
+function ServiceManagementContent() {
+  const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentService, setCurrentService] = useState(null);
   const [user, setUser] = useState(null);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    phone: '',
-    address: '',
-    profileImg: '',
-    isAdmin: false,
+    serviceName: '',
+    description: '',
+    category: '',
+    price: '',
+    image: '',
+    isAvailable: true,
+    rating: 4.5,
+    duration: '2-3 hours',
   });
 
   useEffect(() => {
-    fetchUsers();
+    fetchServices();
     
     // Get user from localStorage
     const storedUser = localStorage.getItem('user');
@@ -35,57 +35,56 @@ function UserManagementContent() {
     }
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchServices = async () => {
     try {
       setLoading(true);
-      const response = await userAPI.getAllUsers();
-      setUsers(Array.isArray(response.data) ? response.data : []);
+      const response = await serviceAPI.getAllServices();
+      setServices(Array.isArray(response.data) ? response.data : []);
       setError(null);
     } catch (err) {
-      console.error('Error fetching users:', err);
-      setError('Failed to load users');
+      console.error('Error fetching services:', err);
+      setError('Failed to load services');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredUsers = users.filter((user) => {
+  const filteredServices = services.filter((service) => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      user.firstName?.toLowerCase().includes(searchLower) ||
-      user.lastName?.toLowerCase().includes(searchLower) ||
-      user.email?.toLowerCase().includes(searchLower) ||
-      user.phone?.toLowerCase().includes(searchLower)
+      service.serviceName?.toLowerCase().includes(searchLower) ||
+      service.description?.toLowerCase().includes(searchLower) ||
+      service.category?.toLowerCase().includes(searchLower)
     );
   });
 
-  const handleEdit = (user) => {
-    setCurrentUser(user);
+  const handleEdit = (service) => {
+    setCurrentService(service);
     setFormData({
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
-      email: user.email || '',
-      password: '',
-      phone: user.phone || '',
-      address: user.address || '',
-      profileImg: user.profileImg || '',
-      isAdmin: user.isAdmin || false,
+      serviceName: service.serviceName || '',
+      description: service.description || '',
+      category: service.category || '',
+      price: service.price || '',
+      image: service.image || '',
+      isAvailable: service.isAvailable ?? true,
+      rating: service.rating || 4.5,
+      duration: service.duration || '2-3 hours',
     });
     setModalMode('edit');
     setShowModal(true);
   };
 
   const handleAdd = () => {
-    setCurrentUser(null);
+    setCurrentService(null);
     setFormData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-      phone: '',
-      address: '',
-      profileImg: '',
-      isAdmin: false,
+      serviceName: '',
+      description: '',
+      category: '',
+      price: '',
+      image: '',
+      isAvailable: true,
+      rating: 4.5,
+      duration: '2-3 hours',
     });
     setModalMode('add');
     setShowModal(true);
@@ -95,72 +94,62 @@ function UserManagementContent() {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value,
     });
   };
 
   const handleSave = async () => {
     try {
-      if (!formData.firstName || !formData.lastName || !formData.email) {
+      if (!formData.serviceName || !formData.description || !formData.category || !formData.price || !formData.image) {
         setError('Please fill in all required fields');
         return;
       }
 
-      if (modalMode === 'add' && !formData.password) {
-        setError('Password is required for new users');
-        return;
-      }
-
       if (modalMode === 'edit') {
-        // Don't send password if it's empty for edits
-        const updateData = { ...formData };
-        if (!updateData.password) {
-          delete updateData.password;
-        }
-        await userAPI.updateUser(currentUser._id, updateData);
-        setUsers(
-          users.map((user) =>
-            user._id === currentUser._id ? { ...user, ...updateData } : user
+        await serviceAPI.updateService(currentService._id, formData);
+        setServices(
+          services.map((service) =>
+            service._id === currentService._id ? { ...service, ...formData } : service
           )
         );
       } else {
-        const response = await userAPI.createUser(formData);
-        setUsers([...users, response.data]);
+        const response = await serviceAPI.createService(formData);
+        setServices([...services, response.data]);
       }
 
       setShowModal(false);
       setError(null);
     } catch (err) {
-      console.error('Error saving user:', err);
-      setError(err.response?.data?.message || 'Failed to save user');
+      console.error('Error saving service:', err);
+      setError(err.response?.data?.message || 'Failed to save service');
     }
   };
 
-  const handleDelete = async (userId, userName) => {
-    if (window.confirm(`Are you sure you want to delete ${userName}?`)) {
+  const handleDelete = async (serviceId, serviceName) => {
+    if (window.confirm(`Are you sure you want to delete ${serviceName}?`)) {
       try {
-        await userAPI.deleteUser(userId);
-        setUsers(users.filter((user) => user._id !== userId));
+        await serviceAPI.deleteService(serviceId);
+        setServices(services.filter((service) => service._id !== serviceId));
         setError(null);
       } catch (err) {
-        console.error('Error deleting user:', err);
-        setError('Failed to delete user');
+        console.error('Error deleting service:', err);
+        setError('Failed to delete service');
       }
     }
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setCurrentUser(null);
+    setCurrentService(null);
     setFormData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-      phone: '',
-      address: '',
-      profileImg: '',
-      isAdmin: false,
+      serviceName: '',
+      description: '',
+      category: '',
+      price: '',
+      image: '',
+      isAvailable: true,
+      rating: 4.5,
+      duration: '2-3 hours',
     });
   };
 
@@ -170,7 +159,7 @@ function UserManagementContent() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <AdminHeader title="User Management" subtitle="Manage system users and permissions" user={user} />
+        <AdminHeader title="Service Management" subtitle="Manage all available services" user={user} />
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
@@ -187,81 +176,88 @@ function UserManagementContent() {
               <Search className="absolute left-3 top-2.5 sm:top-3 text-slate-400 w-4 h-4 sm:w-5 sm:h-5" />
               <input
                 type="text"
-                placeholder="Search by name, email, or phone..."
+                placeholder="Search by service name, category, or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-100 placeholder-slate-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
             </div>
 
-            {/* Add User Button */}
+            {/* Add Service Button */}
             <div className="mb-4 sm:mb-6 flex justify-end">
               <button
                 onClick={handleAdd}
                 className="flex items-center gap-2 bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base hover:bg-cyan-700 transition"
               >
                 <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Add User</span>
+                <span className="hidden sm:inline">Add Service</span>
                 <span className="sm:hidden">Add</span>
               </button>
             </div>
 
-            {/* Users Table */}
+            {/* Services Table */}
             {loading ? (
               <div className="text-center py-12">
-                <p className="text-slate-400 text-sm sm:text-base">Loading users...</p>
+                <p className="text-slate-400 text-sm sm:text-base">Loading services...</p>
               </div>
-            ) : filteredUsers.length === 0 ? (
+            ) : filteredServices.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-slate-400 text-sm sm:text-base">No users found</p>
+                <p className="text-slate-400 text-sm sm:text-base">No services found</p>
               </div>
             ) : (
               <div className="overflow-x-auto bg-slate-800/50 border border-slate-700/50 rounded-lg shadow">
                 <table className="w-full text-xs sm:text-sm">
                   <thead className="bg-slate-900/50 border-b border-slate-700/50">
                     <tr>
-                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-left font-semibold text-slate-300">Name</th>
-                      <th className="hidden sm:table-cell px-6 py-3 text-left font-semibold text-slate-300">Email</th>
-                      <th className="hidden md:table-cell px-6 py-3 text-left font-semibold text-slate-300">Phone</th>
-                      <th className="hidden lg:table-cell px-6 py-3 text-left font-semibold text-slate-300">Address</th>
-                      <th className="hidden sm:table-cell px-6 py-3 text-left font-semibold text-slate-300">Admin</th>
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-left font-semibold text-slate-300">Service Name</th>
+                      <th className="hidden sm:table-cell px-6 py-3 text-left font-semibold text-slate-300">Category</th>
+                      <th className="hidden md:table-cell px-6 py-3 text-left font-semibold text-slate-300">Price</th>
+                      <th className="hidden lg:table-cell px-6 py-3 text-left font-semibold text-slate-300">Duration</th>
+                      <th className="hidden lg:table-cell px-6 py-3 text-left font-semibold text-slate-300">Rating</th>
+                      <th className="hidden sm:table-cell px-6 py-3 text-left font-semibold text-slate-300">Available</th>
                       <th className="px-3 sm:px-6 py-2 sm:py-3 text-center font-semibold text-slate-300">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((user) => (
-                      <tr key={user._id} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition">
+                    {filteredServices.map((service) => (
+                      <tr key={service._id} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition">
                         <td className="px-3 sm:px-6 py-2 sm:py-4 text-slate-100">
                           <div className="font-semibold text-slate-100 truncate">
-                            {user.firstName} {user.lastName}
+                            {service.serviceName}
                           </div>
-                          <div className="text-xs text-slate-400 sm:hidden">{user.email}</div>
+                          <div className="text-xs text-slate-400 sm:hidden">{service.category}</div>
                         </td>
-                        <td className="hidden sm:table-cell px-6 py-4 text-slate-100 truncate">{user.email}</td>
-                        <td className="hidden md:table-cell px-6 py-4 text-slate-100">{user.phone || '-'}</td>
-                        <td className="hidden lg:table-cell px-6 py-4 text-slate-100 truncate">{user.address || '-'}</td>
+                        <td className="hidden sm:table-cell px-6 py-4 text-slate-100">{service.category}</td>
+                        <td className="hidden md:table-cell px-6 py-4 text-slate-100">Rs. {service.price}</td>
+                        <td className="hidden lg:table-cell px-6 py-4 text-slate-100">{service.duration}</td>
+                        <td className="hidden lg:table-cell px-6 py-4 text-slate-100">
+                          <div className="flex items-center gap-1">
+                            <span>★</span>
+                            <span>{service.rating.toFixed(1)}</span>
+                          </div>
+                        </td>
                         <td className="hidden sm:table-cell px-6 py-4">
                           <span
                             className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${
-                              user.isAdmin
+                              service.isAvailable
                                 ? 'bg-emerald-500/10 text-emerald-400'
                                 : 'bg-slate-700/50 text-slate-300'
                             }`}
                           >
-                            {user.isAdmin ? 'Yes' : 'No'}
+                            {service.isAvailable ? 'Available' : 'Unavailable'}
                           </span>
                         </td>
                         <td className="px-3 sm:px-6 py-2 sm:py-4 text-center">
                           <div className="flex items-center justify-center gap-2 sm:gap-3">
                             <button
-                              onClick={() => handleEdit(user)}
+                              onClick={() => handleEdit(service)}
                               className="p-1.5 sm:p-2 text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition"
                               title="Edit"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleDelete(user._id, `${user.firstName} ${user.lastName}`)}
+                              onClick={() => handleDelete(service._id, service.serviceName)}
                               className="p-1.5 sm:p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition"
                               title="Delete"
                             >
@@ -286,7 +282,7 @@ function UserManagementContent() {
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-700/50">
               <h2 className="text-lg sm:text-xl font-bold text-slate-100">
-                {modalMode === 'edit' ? 'Edit User' : 'Add New User'}
+                {modalMode === 'edit' ? 'Edit Service' : 'Add New Service'}
               </h2>
               <button
                 onClick={handleCloseModal}
@@ -300,12 +296,12 @@ function UserManagementContent() {
             <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">
-                  First Name *
+                  Service Name *
                 </label>
                 <input
                   type="text"
-                  name="firstName"
-                  value={formData.firstName}
+                  name="serviceName"
+                  value={formData.serviceName}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
@@ -313,112 +309,105 @@ function UserManagementContent() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Last Name *
+                  Description *
                 </label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
+                <textarea
+                  name="description"
+                  value={formData.description}
                   onChange={handleInputChange}
+                  rows="3"
                   className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Email *
+                  Category *
                 </label>
                 <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
+                  type="text"
+                  name="category"
+                  value={formData.category}
                   onChange={handleInputChange}
-                  disabled={modalMode === 'edit'}
-                  className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-slate-600/30 disabled:opacity-50"
+                  placeholder="e.g., Cleaning, Plumbing, Electrical"
+                  className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
 
-              {modalMode === 'add' && (
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-1">
-                    Password *
+                    Price (Rs.) *
                   </label>
                   <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
+                    type="number"
+                    name="price"
+                    value={formData.price}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   />
                 </div>
-              )}
 
-              {modalMode === 'edit' && (
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-1">
-                    Change Password (leave empty to keep current)
+                    Duration
                   </label>
                   <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
+                    type="text"
+                    name="duration"
+                    value={formData.duration}
                     onChange={handleInputChange}
+                    placeholder="e.g., 2-3 hours"
                     className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   />
                 </div>
-              )}
+              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Phone
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                />
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                    Rating
+                  </label>
+                  <input
+                    type="number"
+                    name="rating"
+                    value={formData.rating}
+                    onChange={handleInputChange}
+                    min="0"
+                    max="5"
+                    step="0.1"
+                    className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+
+                <div className="flex items-end">
+                  <div className="flex items-center gap-3 w-full">
+                    <input
+                      type="checkbox"
+                      id="isAvailable"
+                      name="isAvailable"
+                      checked={formData.isAvailable}
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-cyan-600 border-slate-600/50 rounded focus:ring-2 focus:ring-cyan-500 bg-slate-700/50"
+                    />
+                    <label htmlFor="isAvailable" className="text-sm font-medium text-slate-300">
+                      Available
+                    </label>
+                  </div>
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Profile Image URL
+                  Image URL *
                 </label>
                 <input
                   type="url"
-                  name="profileImg"
-                  value={formData.profileImg}
+                  name="image"
+                  value={formData.image}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
-              </div>
-
-              <div className="flex items-center gap-3 pt-2">
-                <input
-                  type="checkbox"
-                  id="isAdmin"
-                  name="isAdmin"
-                  checked={formData.isAdmin}
-                  onChange={handleInputChange}
-                  className="w-4 h-4 text-cyan-600 border-slate-600/50 rounded focus:ring-2 focus:ring-cyan-500 bg-slate-700/50"
-                />
-                <label htmlFor="isAdmin" className="text-sm font-medium text-slate-300">
-                  Make this user an admin
-                </label>
               </div>
             </div>
 
@@ -435,7 +424,7 @@ function UserManagementContent() {
                 className="flex-1 flex items-center justify-center gap-2 bg-cyan-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base hover:bg-cyan-700 transition"
               >
                 <Save className="w-4 h-4" />
-                <span className="hidden sm:inline">Save User</span>
+                <span className="hidden sm:inline">Save Service</span>
                 <span className="sm:hidden">Save</span>
               </button>
             </div>
@@ -446,10 +435,10 @@ function UserManagementContent() {
   );
 }
 
-export default function UserManagement() {
+export default function ServiceManagement() {
   return (
     <AdminLayoutProvider>
-      <UserManagementContent />
+      <ServiceManagementContent />
     </AdminLayoutProvider>
   );
 }
