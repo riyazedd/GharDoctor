@@ -21,8 +21,8 @@ import CategoryManagement from './pages/CategoryManagement'
 function AppContent() {
   const location = useLocation();
   const currentView = location.pathname === '/' ? 'home' : location.pathname.slice(1);
-  const hideNavbar = ['/login', '/register', '/provider-register', '/admin/dashboard', '/provider-dashboard', '/admin/users', '/admin/providers', '/admin/services', '/admin/categories'].includes(location.pathname);
-  const hideFooter = ['/login', '/register', '/provider-register', '/admin/dashboard', '/provider-dashboard', '/admin/users', '/admin/providers', '/admin/services', '/admin/categories'].includes(location.pathname);
+  const hideNavbar = ['/login', '/register', '/provider-register','/admin', '/admin/dashboard', '/provider-dashboard', '/admin/users', '/admin/providers', '/admin/services', '/admin/categories'].includes(location.pathname);
+  const hideFooter = ['/login', '/register', '/provider-register','/admin', '/admin/dashboard', '/provider-dashboard', '/admin/users', '/admin/providers', '/admin/services', '/admin/categories'].includes(location.pathname);
 
   return (
     <>
@@ -44,7 +44,7 @@ function AppContent() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/provider-register" element={<ProviderRegisterPage />} />
-          <Route path="/admin" element={<Home />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </main>
       {!hideFooter && <Footer />}

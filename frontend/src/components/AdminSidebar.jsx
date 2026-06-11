@@ -22,7 +22,7 @@ export default function AdminSidebar() {
     { label: 'Providers', icon: UserCheck, path: '/admin/providers' },
     { label: 'Services', icon: Briefcase, path: '/admin/services' },
     { label: 'Categories', icon: Tags, path: '/admin/categories' },
-    { label: 'Settings', icon: Settings, path: '/admin/settings' },
+    // { label: 'Settings', icon: Settings, path: '/admin/settings' },
   ];
 
   return (
