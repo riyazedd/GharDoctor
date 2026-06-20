@@ -131,6 +131,10 @@ export const bookingAPI = {
   getProviderBookings: (providerId) =>
     API.get(`/api/bookings/provider/${providerId}`),
 
+  // Get available time slots for a provider on a specific date
+  getAvailableTimeSlots: (providerId, date) =>
+    API.get(`/api/bookings/available-slots/${providerId}/${date}`),
+
   // Create new booking
   createBooking: (bookingData) =>
     API.post("/api/bookings", bookingData),

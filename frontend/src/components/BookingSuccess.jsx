@@ -28,7 +28,7 @@ export default function BookingSuccess({ bookingDetails }) {
                 Booking reference
               </span>
               <span className="text-sm font-extrabold text-cyan-400">
-                {bookingDetails.id}
+                {bookingDetails.bookingId}
               </span>
             </div>
             <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-full">

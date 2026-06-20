@@ -10,6 +10,7 @@ import userRoutes from './routes/userRoutes.js'
 import categoryRoutes from './routes/categoryRoutes.js'
 import serviceRoutes from './routes/serviceRoutes.js'
 import serviceProviderRoutes from './routes/serviceProviderRoutes.js'
+import bookingRoutes from './routes/bookingRoutes.js'
 
 
 const port = 3000;
@@ -38,5 +39,6 @@ app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/service-providers', serviceProviderRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 app.listen(port,()=>console.log(`Server running on port ${port}`));

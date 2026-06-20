@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X, LogOut, ShieldCheck, Calendar, Home, Wrench, ChevronDown, LayoutDashboard, BookOpen } from 'lucide-react';
+import { bookingAPI } from '../API';
 
 export default function Navbar({ currentView }) {
   const navigate = useNavigate();
@@ -22,11 +23,19 @@ export default function Navbar({ currentView }) {
       setUser(parsedUser);
       setIsAuthenticated(true);
       setIsAdmin(parsedUser.isAdmin || false);
-    }
 
-    // Load bookings count
-    const bookings = JSON.parse(localStorage.getItem('ghardoctor_bookings') || '[]');
-    setBookingsCount(bookings.length);
+      // Load bookings count from API
+      const fetchBookingsCount = async () => {
+        try {
+          const response = await bookingAPI.getUserBookings(parsedUser._id);
+          setBookingsCount(response.data.length);
+        } catch (err) {
+          console.error('Error fetching bookings count:', err);
+        }
+      };
+
+      fetchBookingsCount();
+    }
   }, []);
 
   // Close dropdown when clicking outside

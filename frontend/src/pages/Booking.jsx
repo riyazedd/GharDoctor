@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import ProviderCard from '../components/ProviderCard';
 import BookingSuccess from '../components/BookingSuccess';
-import { serviceAPI } from '../API';
+import { serviceAPI, bookingAPI } from '../API';
 
 export default function Booking() {
   const navigate = useNavigate();
@@ -36,6 +36,8 @@ export default function Booking() {
   const [bookingDetails, setBookingDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   // Fetch services on mount
   useEffect(() => {
@@ -102,62 +104,106 @@ export default function Booking() {
     fetchProviders();
   }, [activeService, selectedProviderId, shouldAutoSelectProvider]);
 
-  const handleBookingSubmit = (e) => {
+  // Fetch available time slots when date or provider changes
+  useEffect(() => {
+    if (!selectedProvider || !bookingDate) {
+      setAvailableTimeSlots([]);
+      setBookingTime(''); // Clear selected time
+      return;
+    }
+
+    const fetchAvailableSlots = async () => {
+      setLoadingSlots(true);
+      try {
+        const response = await bookingAPI.getAvailableTimeSlots(
+          selectedProvider._id,
+          bookingDate
+        );
+        setAvailableTimeSlots(response.data.availableSlots);
+        // Clear previously selected time if it's no longer available
+        if (bookingTime && !response.data.availableSlots.includes(bookingTime)) {
+          setBookingTime('');
+        }
+      } catch (err) {
+        console.error('Error fetching available slots:', err);
+        setAvailableTimeSlots([]);
+      } finally {
+        setLoadingSlots(false);
+      }
+    };
+
+    fetchAvailableSlots();
+  }, [selectedProvider, bookingDate]);
+
+  const handleBookingSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSubmitting(true);
 
     if (!isAuthenticated) {
       setError('You must be logged in to schedule a booking.');
+      setSubmitting(false);
       return;
     }
 
     if (!activeService) {
       setError('Please select a service.');
+      setSubmitting(false);
       return;
     }
 
     if (!selectedProvider) {
       setError('Please select a service provider.');
+      setSubmitting(false);
       return;
     }
 
     if (!bookingDate || !bookingTime) {
       setError('Please choose a valid date and time slot.');
+      setSubmitting(false);
       return;
     }
 
     if (!serviceAddress.trim()) {
       setError('Please provide a service address.');
+      setSubmitting(false);
       return;
     }
 
-    // Create booking object
-    const bookingId = `BK-${Math.floor(100000 + Math.random() * 900000)}`;
-    const newBooking = {
-      id: bookingId,
-      userEmail: user.email,
-      userName: `${user.firstName} ${user.lastName}`,
-      serviceName: activeService.serviceName,
-      price: activeService.price,
-      duration: activeService.duration,
-      category: activeService.category,
-      image: activeService.image,
-      providerName: `${selectedProvider.firstName} ${selectedProvider.lastName}`,
-      providerPhone: selectedProvider.phone || '9800000000',
-      date: bookingDate,
-      time: bookingTime,
-      address: serviceAddress,
-      instructions: instructions || 'No special instructions provided.',
-      status: 'Scheduled',
-      createdAt: new Date().toLocaleDateString(),
-    };
+    try {
+      // Create booking object
+      const bookingId = `BK-${Math.floor(100000 + Math.random() * 900000)}`;
+      const newBooking = {
+        bookingId,
+        userId: user._id,
+        serviceId: activeService._id,
+        serviceProviderId: selectedProvider._id,
+        userEmail: user.email,
+        userName: `${user.firstName} ${user.lastName}`,
+        serviceName: activeService.serviceName,
+        price: activeService.price,
+        duration: activeService.duration,
+        category: activeService.category,
+        image: activeService.image,
+        providerName: `${selectedProvider.firstName} ${selectedProvider.lastName}`,
+        providerPhone: selectedProvider.phone || '9800000000',
+        date: bookingDate,
+        time: bookingTime,
+        address: serviceAddress,
+        instructions: instructions || 'No special instructions provided.',
+        status: 'Scheduled',
+      };
 
-    // Save to localStorage
-    const existingBookings = JSON.parse(localStorage.getItem('ghardoctor_bookings') || '[]');
-    localStorage.setItem('ghardoctor_bookings', JSON.stringify([newBooking, ...existingBookings]));
-
-    setBookingDetails(newBooking);
-    setSuccess(true);
+      // Save to database
+      const response = await bookingAPI.createBooking(newBooking);
+      setBookingDetails(response.data);
+      setSuccess(true);
+    } catch (err) {
+      console.error('Error creating booking:', err);
+      setError(err.response?.data?.message || 'Failed to create booking. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // If Booking is successful, render Success screen
@@ -329,15 +375,35 @@ export default function Booking() {
                     </div>
                     <select
                       required
+                      disabled={!bookingDate || !selectedProvider || loadingSlots}
                       value={bookingTime}
                       onChange={(e) => setBookingTime(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-955 border border-slate-800 focus:border-cyan-500/50 rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500/50 text-slate-200 transition-all cursor-pointer"
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-955 border border-slate-800 focus:border-cyan-500/50 rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500/50 text-slate-200 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <option value="">Select a time slot</option>
-                      <option value="09:00 AM">09:00 AM - 11:00 AM (Morning)</option>
-                      <option value="11:30 AM">11:30 AM - 01:30 PM (Mid-day)</option>
-                      <option value="02:00 PM">02:00 PM - 04:00 PM (Afternoon)</option>
-                      <option value="04:30 PM">04:30 PM - 06:30 PM (Evening)</option>
+                      <option value="">
+                        {loadingSlots
+                          ? 'Loading available slots...'
+                          : !bookingDate
+                          ? 'Select a date first'
+                          : !selectedProvider
+                          ? 'Select a provider first'
+                          : availableTimeSlots.length === 0
+                          ? 'No available slots'
+                          : 'Select a time slot'}
+                      </option>
+                      {!loadingSlots && availableTimeSlots.map((slot) => (
+                        <option key={slot} value={slot}>
+                          {slot === '09:00 AM'
+                            ? '09:00 AM - 11:00 AM (Morning)'
+                            : slot === '11:30 AM'
+                            ? '11:30 AM - 01:30 PM (Mid-day)'
+                            : slot === '02:00 PM'
+                            ? '02:00 PM - 04:00 PM (Afternoon)'
+                            : slot === '04:30 PM'
+                            ? '04:30 PM - 06:30 PM (Evening)'
+                            : slot}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>

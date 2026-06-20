@@ -4,6 +4,7 @@ import {
   Calendar, Clock, MapPin, Phone, User,
   CheckCircle, AlertCircle, Trash2, Home, ArrowRight
 } from 'lucide-react';
+import { bookingAPI } from '../API';
 
 export default function MyBookings() {
   const navigate = useNavigate();
@@ -29,26 +30,37 @@ export default function MyBookings() {
       return;
     }
 
-    // Load bookings from localStorage
-    const savedBookings = JSON.parse(localStorage.getItem('ghardoctor_bookings') || '[]');
-    setBookings(savedBookings);
-    setLoadingBookings(false);
+    // Load bookings from API
+    const fetchBookings = async () => {
+      try {
+        const response = await bookingAPI.getUserBookings(user._id);
+        setBookings(response.data);
+      } catch (err) {
+        console.error('Error fetching bookings:', err);
+        setError('Failed to load bookings');
+      } finally {
+        setLoadingBookings(false);
+      }
+    };
+
+    fetchBookings();
   }, [navigate]);
 
-  const cancelBooking = (bookingId) => {
+  const cancelBooking = async (bookingId) => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) {
       return;
     }
 
     try {
+      await bookingAPI.cancelBooking(bookingId);
       const updatedBookings = bookings.map(booking =>
-        booking.id === bookingId ? { ...booking, status: 'Cancelled' } : booking
+        booking._id === bookingId ? { ...booking, status: 'Cancelled' } : booking
       );
-      localStorage.setItem('ghardoctor_bookings', JSON.stringify(updatedBookings));
       setBookings(updatedBookings);
       setSuccess('Booking cancelled successfully!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
+      console.error('Error cancelling booking:', err);
       setError('Failed to cancel booking');
       setTimeout(() => setError(''), 3000);
     }
@@ -122,7 +134,7 @@ export default function MyBookings() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {bookings.map((booking) => (
                 <div
-                  key={booking.id}
+                  key={booking._id}
                   className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 space-y-4 hover:border-slate-700 transition-all"
                 >
                   {/* Booking Header */}
@@ -141,7 +153,7 @@ export default function MyBookings() {
                         </span>
                       </div>
                       <p className="text-sm text-slate-400">{booking.category}</p>
-                      <p className="text-xs text-slate-500 mt-1">ID: {booking.id}</p>
+                      <p className="text-xs text-slate-500 mt-1">ID: {booking.bookingId}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-slate-400 mb-1">Total Cost</p>
@@ -182,7 +194,7 @@ export default function MyBookings() {
                   {booking.status === 'Scheduled' && (
                     <div className="pt-4 border-t border-slate-800 flex gap-2">
                       <button
-                        onClick={() => cancelBooking(booking.id)}
+                        onClick={() => cancelBooking(booking._id)}
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:border-rose-500/50 font-semibold transition-all"
                       >
                         <Trash2 className="w-4 h-4" />
