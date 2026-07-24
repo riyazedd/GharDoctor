@@ -1,6 +1,7 @@
 import asyncHandler from "../middleware/asyncHandler.js";
 import ServiceProvider from "../models/serviceProviderModel.js";
 import generateToken from "../utils/generateToken.js";
+import { parseBooleanField, parseNumberField, resolveUploadedImage } from '../utils/uploadUtils.js';
 
 // @desc    Get all service providers
 // @route   GET /api/service-providers
@@ -44,7 +45,13 @@ export const getProvidersByCategory = asyncHandler(async (req, res) => {
 // @route   POST /api/service-providers
 // @access  Private/Admin
 export const createServiceProvider = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password, phone, skill, experience, citizenshipImage } = req.body;
+  const { firstName, lastName, email, password, phone, skill, experience } = req.body;
+  const citizenshipImage = resolveUploadedImage(req, 'citizenshipImage');
+  const avatar = resolveUploadedImage(req, 'avatar');
+
+  if (!citizenshipImage) {
+    return res.status(400).json({ message: 'Citizenship image is required' });
+  }
   
   // Check if provider already exists
   const existingProvider = await ServiceProvider.findOne({ email });
@@ -59,8 +66,9 @@ export const createServiceProvider = asyncHandler(async (req, res) => {
     password,
     phone,
     skill,
-    experience: experience || 0,
+    experience: parseNumberField(experience),
     citizenshipImage,
+    ...(avatar ? { avatar } : {}),
     availability: true,
   });
   
@@ -77,6 +85,8 @@ export const createServiceProvider = asyncHandler(async (req, res) => {
       skill: provider.skill,
       experience: provider.experience,
       availability: provider.availability,
+      citizenshipImage: provider.citizenshipImage,
+      avatar: provider.avatar,
     },
   });
 });
@@ -91,15 +101,18 @@ export const updateServiceProvider = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Service provider not found' });
   }
   
-  const { firstName, lastName, phone, skill, experience, availability, citizenshipImage } = req.body;
+  const { firstName, lastName, phone, skill, experience, availability } = req.body;
+  const citizenshipImage = resolveUploadedImage(req, 'citizenshipImage', provider.citizenshipImage);
+  const avatar = resolveUploadedImage(req, 'avatar', provider.avatar);
   
   provider.firstName = firstName || provider.firstName;
   provider.lastName = lastName || provider.lastName;
   provider.phone = phone || provider.phone;
   provider.skill = skill || provider.skill;
-  provider.experience = experience !== undefined ? experience : provider.experience;
-  provider.availability = availability !== undefined ? availability : provider.availability;
+  provider.experience = experience !== undefined ? parseNumberField(experience, provider.experience) : provider.experience;
+  provider.availability = availability !== undefined ? parseBooleanField(availability, provider.availability) : provider.availability;
   provider.citizenshipImage = citizenshipImage || provider.citizenshipImage;
+  provider.avatar = avatar || provider.avatar;
   
   await provider.save();
   
@@ -114,6 +127,50 @@ export const updateServiceProvider = asyncHandler(async (req, res) => {
       skill: provider.skill,
       experience: provider.experience,
       availability: provider.availability,
+      citizenshipImage: provider.citizenshipImage,
+      avatar: provider.avatar,
+    },
+  });
+});
+
+// @desc    Update current service provider profile
+// @route   PUT /api/service-providers/profile
+// @access  Private/Provider
+export const updateCurrentServiceProvider = asyncHandler(async (req, res) => {
+  let provider = await ServiceProvider.findById(req.provider._id);
+  
+  if (!provider) {
+    return res.status(404).json({ message: 'Service provider not found' });
+  }
+  
+  const { firstName, lastName, phone, skill, experience, availability } = req.body;
+  const citizenshipImage = resolveUploadedImage(req, 'citizenshipImage', provider.citizenshipImage);
+  const avatar = resolveUploadedImage(req, 'avatar', provider.avatar);
+  
+  provider.firstName = firstName || provider.firstName;
+  provider.lastName = lastName || provider.lastName;
+  provider.phone = phone || provider.phone;
+  provider.skill = skill || provider.skill;
+  provider.experience = experience !== undefined ? parseNumberField(experience, provider.experience) : provider.experience;
+  provider.availability = availability !== undefined ? parseBooleanField(availability, provider.availability) : provider.availability;
+  provider.citizenshipImage = citizenshipImage || provider.citizenshipImage;
+  provider.avatar = avatar || provider.avatar;
+  
+  await provider.save();
+  
+  res.status(200).json({
+    message: 'Service provider updated successfully',
+    provider: {
+      _id: provider._id,
+      firstName: provider.firstName,
+      lastName: provider.lastName,
+      email: provider.email,
+      phone: provider.phone,
+      skill: provider.skill,
+      experience: provider.experience,
+      availability: provider.availability,
+      citizenshipImage: provider.citizenshipImage,
+      avatar: provider.avatar,
     },
   });
 });
@@ -136,7 +193,9 @@ export const deleteServiceProvider = asyncHandler(async (req, res) => {
 // @access  Public
 export const registerServiceProvider = asyncHandler(async (req, res) => {
   try {
-    const { firstName, lastName, email, password, phone, skill, experience, availability, citizenshipImage } = req.body;
+    const { firstName, lastName, email, password, phone, skill, experience, availability } = req.body;
+    const citizenshipImage = resolveUploadedImage(req, 'citizenshipImage');
+    const avatar = resolveUploadedImage(req, 'avatar');
 
     // Validate required fields
     if (!firstName || !lastName || !email || !password || !phone || !skill || !citizenshipImage) {
@@ -156,9 +215,10 @@ export const registerServiceProvider = asyncHandler(async (req, res) => {
       password,
       phone,
       skill,
-      experience: experience || 0,
+      experience: parseNumberField(experience),
       citizenshipImage,
-      availability: availability !== undefined ? availability : true,
+      ...(avatar ? { avatar } : {}),
+      availability: availability !== undefined ? parseBooleanField(availability, true) : true,
     });
 
     await provider.save();
@@ -178,6 +238,8 @@ export const registerServiceProvider = asyncHandler(async (req, res) => {
       rating: provider.rating,
       reviews: provider.reviews,
       completedJobs: provider.completedJobs,
+      citizenshipImage: provider.citizenshipImage,
+      avatar: provider.avatar,
       isProvider: true,
       token,
     });
@@ -210,6 +272,8 @@ export const loginServiceProvider = asyncHandler(async (req, res) => {
       rating: provider.rating,
       reviews: provider.reviews,
       completedJobs: provider.completedJobs,
+      citizenshipImage: provider.citizenshipImage,
+      avatar: provider.avatar,
       isServiceProvider: provider.isServiceProvider,
       token: token,
     });

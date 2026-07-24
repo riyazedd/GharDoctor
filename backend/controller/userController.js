@@ -1,6 +1,7 @@
 import asyncHandler from '../middleware/asyncHandler.js';
 import generateToken from '../utils/generateToken.js';
 import User from '../models/userModel.js';
+import { parseBooleanField, resolveUploadedImage } from '../utils/uploadUtils.js';
 
 // @desc    Auth user & get token
 // @route   POST /api/users/login
@@ -33,7 +34,8 @@ const authUser = asyncHandler(async (req, res) => {
 // @route   POST /api/users
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password, phone, address, profileImg } = req.body;
+  const { firstName, lastName, email, password, phone, address } = req.body;
+  const profileImg = resolveUploadedImage(req, 'profileImg');
 
   const userExists = await User.findOne({ email });
 
@@ -49,7 +51,8 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
     phone,
     address,
-    profileImg
+    profileImg,
+    isAdmin: req.user?.isAdmin ? parseBooleanField(req.body.isAdmin, false) : false
   });
 
   if (user) {
@@ -113,7 +116,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     user.email = req.body.email || user.email;
     user.phone = req.body.phone || user.phone;
     user.address = req.body.address || user.address;
-    user.profileImg = req.body.profileImg || user.profileImg;
+    user.profileImg = resolveUploadedImage(req, 'profileImg', user.profileImg);
 
     if (req.body.password) {
       user.password = req.body.password;
@@ -185,8 +188,8 @@ const updateUser = asyncHandler(async (req, res) => {
     user.email = req.body.email || user.email;
     user.phone = req.body.phone || user.phone;
     user.address = req.body.address || user.address;
-    user.profileImg = req.body.profileImg || user.profileImg;
-    user.isAdmin = Boolean(req.body.isAdmin);
+    user.profileImg = resolveUploadedImage(req, 'profileImg', user.profileImg);
+    user.isAdmin = parseBooleanField(req.body.isAdmin, user.isAdmin);
 
     if (req.body.password) {
       user.password = req.body.password;

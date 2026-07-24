@@ -5,6 +5,7 @@ import {
   CheckCircle, AlertCircle, Trash2, LogOut, Home
 } from 'lucide-react';
 import { bookingAPI } from '../API';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ export default function Dashboard() {
     fetchBookings();
   }, [token, user, navigate]);
 
+
   const cancelBooking = async (bookingId) => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) {
       return;
@@ -62,6 +64,17 @@ export default function Dashboard() {
       setTimeout(() => setError(''), 3000);
     }
   };
+
+    const handleLogout = () => {
+    if (window.confirm('Are you sure you want to logout?')) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/');
+    }
+  };
+
+
+
 
   if (!user) {
     return (
@@ -89,9 +102,12 @@ export default function Dashboard() {
         {/* Header */}
         <div className="bg-slate-900/40 border border-slate-800/60 rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4 flex-1">
-            <div className="w-16 h-16 rounded-2xl bg-linear-to-tr from-cyan-400 to-blue-500 flex items-center justify-center text-slate-950 font-bold text-2xl shadow-lg">
-              {user.firstName?.[0] || 'U'}
-            </div>
+            <ImageWithFallback
+              src={user.profileImg}
+              alt={`${user.firstName || 'User'} profile`}
+              fallback={user.firstName?.[0] || 'U'}
+              className="w-16 h-16 rounded-2xl shadow-lg"
+            />
             <div>
               <h1 className="text-3xl font-extrabold text-slate-100">
                 Welcome, {user.firstName}!
@@ -258,7 +274,9 @@ export default function Dashboard() {
         {/* Profile Tab */}
         {activeTab === 'profile' && (
           <div className="max-w-2xl bg-slate-900/40 border border-slate-800/60 rounded-2xl p-8 space-y-6">
-            <h2 className="text-2xl font-bold text-slate-100 border-b border-slate-800 pb-4">Account Information</h2>
+            <div className="border-b border-slate-800 pb-4">
+              <h2 className="text-2xl font-bold text-slate-100">Account Information</h2>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>

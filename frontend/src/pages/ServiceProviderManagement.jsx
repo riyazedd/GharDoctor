@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, X, Save } from 'lucide-react';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminHeader from '../components/AdminHeader';
+import ImageWithFallback from '../components/ImageWithFallback';
 import { AdminLayoutProvider, useAdminLayout } from '../context/AdminLayoutContext';
 import { providerAPI, userAPI } from '../API';
 
@@ -25,6 +26,7 @@ const ServiceProviderManagementContent = () => {
     experience: 0,
     availability: true,
     citizenshipImage: '',
+    avatar: '',
   });
 
   // Fetch admin user info
@@ -71,6 +73,17 @@ const ServiceProviderManagementContent = () => {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    const file = files?.[0];
+    if (file) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: file,
+      }));
+    }
+  };
+
   const handleAdd = () => {
     setModalMode('add');
     setCurrentProvider(null);
@@ -84,6 +97,7 @@ const ServiceProviderManagementContent = () => {
       experience: 0,
       availability: true,
       citizenshipImage: '',
+      avatar: '',
     });
     setShowModal(true);
     setError(null);
@@ -102,6 +116,7 @@ const ServiceProviderManagementContent = () => {
       experience: provider.experience,
       availability: provider.availability,
       citizenshipImage: provider.citizenshipImage,
+      avatar: provider.avatar,
     });
     setShowModal(true);
     setError(null);
@@ -120,6 +135,7 @@ const ServiceProviderManagementContent = () => {
       experience: 0,
       availability: true,
       citizenshipImage: '',
+      avatar: '',
     });
     setError(null);
   };
@@ -149,7 +165,7 @@ const ServiceProviderManagementContent = () => {
         );
       } else {
         const response = await providerAPI.createProvider(formData);
-        setProviders([...providers, response.data]);
+        setProviders([...providers, response.data.provider || response.data]);
       }
 
       setShowModal(false);
@@ -225,6 +241,8 @@ const ServiceProviderManagementContent = () => {
               <table className="w-full text-xs sm:text-sm">
                 <thead className="bg-slate-900/50 border-b border-slate-700/50">
                   <tr>
+                    <th className="hidden xl:table-cell px-6 py-3 text-left font-semibold text-slate-300">Avatar</th>
+                    <th className="hidden xl:table-cell px-6 py-3 text-left font-semibold text-slate-300">Citizenship</th>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-left font-semibold text-slate-300">Name</th>
                     <th className="hidden sm:table-cell px-6 py-3 text-left font-semibold text-slate-300">Email</th>
                     <th className="hidden md:table-cell px-6 py-3 text-left font-semibold text-slate-300">Phone</th>
@@ -237,6 +255,22 @@ const ServiceProviderManagementContent = () => {
                 <tbody>
                   {filteredProviders.map((provider) => (
                     <tr key={provider._id} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition">
+                      <td className="hidden xl:table-cell px-6 py-4">
+                        <ImageWithFallback
+                          src={provider.avatar}
+                          alt={`${provider.firstName} ${provider.lastName} avatar`}
+                          fallback={provider.firstName?.[0] || 'P'}
+                          className="w-10 h-10 rounded-full"
+                        />
+                      </td>
+                      <td className="hidden xl:table-cell px-6 py-4">
+                        <ImageWithFallback
+                          src={provider.citizenshipImage}
+                          alt={`${provider.firstName} ${provider.lastName} citizenship`}
+                          fallback="ID"
+                          className="w-14 h-10 rounded-lg"
+                        />
+                      </td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-slate-100">
                         <div className="font-semibold text-slate-100 truncate">
                           {provider.firstName} {provider.lastName}
@@ -417,15 +451,58 @@ const ServiceProviderManagementContent = () => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Citizenship Image URL *
+                  Citizenship Image *
                 </label>
+                {typeof formData.citizenshipImage === 'string' && formData.citizenshipImage && (
+                  <div className="mb-2">
+                    <ImageWithFallback
+                      src={formData.citizenshipImage}
+                      alt={`${formData.firstName || 'Provider'} citizenship preview`}
+                      fallback="ID"
+                      className="w-full h-36 rounded-lg"
+                    />
+                  </div>
+                )}
                 <input
-                  type="url"
+                  type="file"
                   name="citizenshipImage"
-                  value={formData.citizenshipImage}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 file:mr-4 file:rounded-md file:border-0 file:bg-cyan-600 file:px-3 file:py-2 file:text-white"
                 />
+                <p className="mt-1 text-xs text-slate-400">
+                  {typeof formData.citizenshipImage === 'string' && formData.citizenshipImage
+                    ? 'Current image will stay unless you choose a new file.'
+                    : formData.citizenshipImage?.name || 'Choose an image file to upload.'}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  Avatar Image
+                </label>
+                {typeof formData.avatar === 'string' && formData.avatar && (
+                  <div className="mb-2">
+                    <ImageWithFallback
+                      src={formData.avatar}
+                      alt={`${formData.firstName || 'Provider'} avatar preview`}
+                      fallback={formData.firstName?.[0] || 'P'}
+                      className="w-24 h-24 rounded-full"
+                    />
+                  </div>
+                )}
+                <input
+                  type="file"
+                  name="avatar"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 file:mr-4 file:rounded-md file:border-0 file:bg-cyan-600 file:px-3 file:py-2 file:text-white"
+                />
+                <p className="mt-1 text-xs text-slate-400">
+                  {typeof formData.avatar === 'string' && formData.avatar
+                    ? 'Current avatar will stay unless you choose a new file.'
+                    : formData.avatar?.name || 'Choose an optional avatar image file.'}
+                </p>
               </div>
 
               <div className="flex items-center gap-3 pt-2">

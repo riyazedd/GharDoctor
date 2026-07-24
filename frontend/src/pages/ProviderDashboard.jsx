@@ -1,19 +1,43 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  User, Briefcase, Star, CheckCircle, AlertCircle, Trash2, LogOut,
-  Calendar, Clock, MapPin, Phone, Mail, Activity, TrendingUp, Power
+  User, Briefcase, Star, CheckCircle, AlertCircle, LogOut, MessageSquare,
+  Calendar, Clock, MapPin, Phone, Mail, Activity, TrendingUp, Power, Edit2, Save
 } from 'lucide-react';
+import { bookingAPI, providerAPI } from '../API';
+import ChatBox from '../components/ChatBox';
+import useBookingChatNotifications from '../hooks/useBookingChatNotifications';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 export default function ProviderDashboard() {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [user, setUser] = useState(null);
-  const [serviceRequests, setServiceRequests] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const [activeChatBooking, setActiveChatBooking] = useState(null);
+  const [profileEditMode, setProfileEditMode] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    skill: '',
+    experience: 0,
+    availability: true,
+    avatar: '',
+  });
+  const [avatarPreview, setAvatarPreview] = useState('');
+
+  const { unreadCounts, notification, clearUnreadForBooking, dismissNotification } = useBookingChatNotifications({
+    bookings,
+    currentUser: user,
+    activeBookingId: activeChatBooking?._id || null,
+  });
 
   // Check authentication and provider status on mount
   useEffect(() => {
@@ -33,11 +57,37 @@ export default function ProviderDashboard() {
     }
 
     setUser(userData);
-    // Load service requests from localStorage (simulated)
-    const savedRequests = JSON.parse(localStorage.getItem('ghardoctor_service_requests') || '[]');
-    setServiceRequests(savedRequests);
-    setLoading(false);
+
+    const fetchProviderBookings = async () => {
+      try {
+        const response = await bookingAPI.getProviderBookings(userData._id);
+        setBookings(response.data || []);
+      } catch (err) {
+        console.error('Error fetching provider bookings:', err);
+        setError('Failed to load bookings');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProviderBookings();
   }, [navigate]);
+
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        skill: user.skill || '',
+        experience: user.experience || 0,
+        availability: user.availability ?? true,
+        avatar: user.avatar || '',
+      });
+      setAvatarPreview(user.avatar || '');
+    }
+  }, [user]);
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
@@ -60,38 +110,55 @@ export default function ProviderDashboard() {
     }
   };
 
-  const acceptRequest = (requestId) => {
-    try {
-      const updatedRequests = serviceRequests.map(req =>
-        req.id === requestId ? { ...req, status: 'Accepted' } : req
-      );
-      localStorage.setItem('ghardoctor_service_requests', JSON.stringify(updatedRequests));
-      setServiceRequests(updatedRequests);
-      setSuccess('Service request accepted!');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError('Failed to accept request');
-      setTimeout(() => setError(''), 3000);
-    }
+  const handleProfileFieldChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    setProfileForm((previous) => ({
+      ...previous,
+      [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value,
+    }));
   };
 
-  const rejectRequest = (requestId) => {
-    if (!window.confirm('Are you sure you want to reject this request?')) {
+  const handleAvatarChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
       return;
     }
 
+    setProfileForm((previous) => ({
+      ...previous,
+      avatar: file,
+    }));
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleProfileSave = async (event) => {
+    event.preventDefault();
+    setSavingProfile(true);
+    setError('');
+
     try {
-      const updatedRequests = serviceRequests.map(req =>
-        req.id === requestId ? { ...req, status: 'Rejected' } : req
-      );
-      localStorage.setItem('ghardoctor_service_requests', JSON.stringify(updatedRequests));
-      setServiceRequests(updatedRequests);
-      setSuccess('Service request rejected');
-      setTimeout(() => setSuccess(''), 3000);
+      const response = await providerAPI.updateMyProfile(profileForm);
+      const updatedProvider = response.data.provider;
+      setUser((previous) => ({ ...previous, ...updatedProvider }));
+      localStorage.setItem('user', JSON.stringify({ ...user, ...updatedProvider }));
+      setSuccess('Profile updated successfully');
+      setProfileEditMode(false);
     } catch (err) {
-      setError('Failed to reject request');
-      setTimeout(() => setError(''), 3000);
+      console.error('Error updating provider profile:', err);
+      setError(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setSavingProfile(false);
     }
+  };
+
+  const openChatForBooking = (booking) => {
+    setActiveChatBooking(booking);
+    clearUnreadForBooking(booking._id);
   };
 
   if (!user) {
@@ -114,10 +181,9 @@ export default function ProviderDashboard() {
     );
   }
 
-  const pendingRequests = serviceRequests.filter(r => r.status === 'Pending');
-  const acceptedRequests = serviceRequests.filter(r => r.status === 'Accepted');
-  const completedJobs = user.completedJobs || 0;
-  const avgRating = user.rating || 0;
+  const scheduledBookings = bookings.filter((booking) => booking.status === 'Scheduled');
+  const inProgressBookings = bookings.filter((booking) => booking.status === 'In Progress');
+  const completedBookings = bookings.filter((booking) => booking.status === 'Completed');
 
   return (
     <div className="min-h-screen bg-slate-950 pt-8 pb-16">
@@ -126,9 +192,12 @@ export default function ProviderDashboard() {
         <div className="bg-slate-900/40 border border-slate-800/60 rounded-3xl p-8">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-center gap-4 flex-1">
-              <div className="w-16 h-16 rounded-2xl bg-linear-to-tr from-emerald-400 to-teal-500 flex items-center justify-center text-slate-950 font-bold text-2xl shadow-lg">
-                {user.firstName?.[0] || 'P'}
-              </div>
+              <ImageWithFallback
+                src={user.avatar || user.profileImg}
+                alt={`${user.firstName || 'Provider'} avatar`}
+                fallback={user.firstName?.[0] || 'P'}
+                className="w-16 h-16 rounded-2xl shadow-lg"
+              />
               <div>
                 <h1 className="text-3xl font-extrabold text-slate-100">
                   Welcome, {user.firstName}!
@@ -175,13 +244,54 @@ export default function ProviderDashboard() {
           </div>
         )}
 
+        {notification && (
+          <div className="fixed bottom-5 right-5 z-40 w-[calc(100vw-2rem)] max-w-sm rounded-2xl border border-cyan-500/30 bg-slate-950 shadow-2xl shadow-cyan-500/10 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-400 mb-1">New message</p>
+                <h3 className="text-sm font-bold text-slate-100">{notification.title}</h3>
+                <p className="text-sm text-slate-400 mt-1 line-clamp-2">{notification.message}</p>
+              </div>
+              <button
+                type="button"
+                onClick={dismissNotification}
+                className="text-slate-500 hover:text-slate-200 transition-colors"
+              >
+                <AlertCircle className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const booking = bookings.find((item) => String(item._id) === String(notification.bookingId));
+                  if (booking) {
+                    openChatForBooking(booking);
+                  }
+                  dismissNotification();
+                }}
+                className="flex-1 rounded-xl bg-cyan-500 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-cyan-400 transition-colors"
+              >
+                View Chat
+              </button>
+              <button
+                type="button"
+                onClick={dismissNotification}
+                className="rounded-xl border border-slate-800 px-4 py-2 text-sm font-semibold text-slate-300 hover:border-slate-700 hover:text-slate-100 transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-semibold mb-1">Completed Jobs</p>
-                <p className="text-3xl font-bold text-emerald-400">{completedJobs}</p>
+                <p className="text-slate-400 text-sm font-semibold mb-1">Total Bookings</p>
+                <p className="text-3xl font-bold text-emerald-400">{bookings.length}</p>
               </div>
               <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
                 <CheckCircle className="w-6 h-6" />
@@ -192,8 +302,8 @@ export default function ProviderDashboard() {
           <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-semibold mb-1">Pending Requests</p>
-                <p className="text-3xl font-bold text-cyan-400">{pendingRequests.length}</p>
+                <p className="text-slate-400 text-sm font-semibold mb-1">Scheduled</p>
+                <p className="text-3xl font-bold text-cyan-400">{scheduledBookings.length}</p>
               </div>
               <div className="p-3 bg-cyan-500/10 rounded-xl text-cyan-400">
                 <Calendar className="w-6 h-6" />
@@ -204,11 +314,8 @@ export default function ProviderDashboard() {
           <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-semibold mb-1">Rating</p>
-                <div className="flex items-center gap-1">
-                  <p className="text-3xl font-bold text-yellow-400">{avgRating.toFixed(1)}</p>
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                </div>
+                <p className="text-slate-400 text-sm font-semibold mb-1">In Progress</p>
+                <p className="text-3xl font-bold text-yellow-400">{inProgressBookings.length}</p>
               </div>
               <div className="p-3 bg-yellow-500/10 rounded-xl text-yellow-400">
                 <Star className="w-6 h-6" />
@@ -219,8 +326,8 @@ export default function ProviderDashboard() {
           <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-semibold mb-1">Total Reviews</p>
-                <p className="text-3xl font-bold text-blue-400">{user.reviews || 0}</p>
+                <p className="text-slate-400 text-sm font-semibold mb-1">Completed</p>
+                <p className="text-3xl font-bold text-blue-400">{completedBookings.length}</p>
               </div>
               <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400">
                 <Activity className="w-6 h-6" />
@@ -249,7 +356,7 @@ export default function ProviderDashboard() {
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            Service Requests ({pendingRequests.length})
+            Bookings ({bookings.length})
           </button>
           <button
             onClick={() => setActiveTab('profile')}
@@ -271,23 +378,23 @@ export default function ProviderDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
                 <h3 className="text-lg font-bold text-slate-100 mb-4">Recent Activity</h3>
-                {acceptedRequests.length > 0 ? (
+                {bookings.length > 0 ? (
                   <div className="space-y-3">
-                    {acceptedRequests.slice(0, 5).map(req => (
-                      <div key={req.id} className="flex items-center gap-4 p-3 bg-slate-900/50 rounded-xl border border-slate-800">
+                    {bookings.slice(0, 5).map(booking => (
+                      <div key={booking._id || booking.bookingId} className="flex items-center gap-4 p-3 bg-slate-900/50 rounded-xl border border-slate-800">
                         <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
                         <div className="flex-1">
-                          <p className="text-slate-100 font-semibold">{req.serviceName}</p>
-                          <p className="text-xs text-slate-400">{req.date} at {req.time}</p>
+                          <p className="text-slate-100 font-semibold">{booking.serviceName}</p>
+                          <p className="text-xs text-slate-400">{booking.date} at {booking.time}</p>
                         </div>
                         <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400">
-                          Accepted
+                          {booking.status}
                         </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-slate-400 text-center py-8">No accepted requests yet</p>
+                  <p className="text-slate-400 text-center py-8">No bookings yet</p>
                 )}
               </div>
 
@@ -303,7 +410,7 @@ export default function ProviderDashboard() {
                     <p className="text-slate-200 font-semibold">{user.experience || 0} years</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Status</p>
+                      <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Status</p>
                     <p className={`font-semibold ${user.availability ? 'text-emerald-400' : 'text-slate-400'}`}>
                       {user.availability ? '🟢 Available' : '🔴 Unavailable'}
                     </p>
@@ -314,83 +421,93 @@ export default function ProviderDashboard() {
           </div>
         )}
 
-        {/* Service Requests Tab */}
         {activeTab === 'requests' && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-100 border-b border-slate-800 pb-4">Service Requests</h2>
+              <h2 className="text-2xl font-bold text-slate-100 border-b border-slate-800 pb-4">Bookings</h2>
             
             {loading ? (
               <div className="py-20 text-center">
                 <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
                 <p className="text-slate-400 mt-4">Loading service requests...</p>
               </div>
-            ) : pendingRequests.length > 0 ? (
+            ) : bookings.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {pendingRequests.map((request) => (
+                {bookings.map((booking) => (
                   <div
-                    key={request.id}
+                    key={booking._id || booking.bookingId}
                     className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 space-y-4 hover:border-slate-700 transition-all"
                   >
-                    {/* Request Header */}
+                    {/* Booking Header */}
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-lg font-bold text-slate-100">{request.serviceName}</h3>
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-cyan-500/15 text-cyan-400">
-                            Pending
+                          <h3 className="text-lg font-bold text-slate-100">{booking.serviceName}</h3>
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                              booking.status === 'Completed'
+                                ? 'bg-emerald-500/15 text-emerald-400'
+                                : booking.status === 'In Progress'
+                                ? 'bg-cyan-500/15 text-cyan-400'
+                                : booking.status === 'Cancelled'
+                                ? 'bg-rose-500/15 text-rose-400'
+                                : 'bg-amber-500/15 text-amber-400'
+                            }`}
+                          >
+                            {booking.status}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-400">{request.category}</p>
+                        <p className="text-sm text-slate-400">{booking.category}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-slate-400 mb-1">Offered Price</p>
-                        <p className="text-xl font-bold text-emerald-400">Rs. {request.price}</p>
+                        <p className="text-xl font-bold text-emerald-400">Rs. {booking.price}</p>
                       </div>
                     </div>
 
-                    {/* Request Details */}
+                    {/* Booking Details */}
                     <div className="pt-4 border-t border-slate-800 space-y-3">
                       <div className="flex items-center gap-3 text-sm">
                         <Calendar className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span className="text-slate-300">{request.date}</span>
+                        <span className="text-slate-300">{booking.date}</span>
                         <Clock className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span className="text-slate-300">{request.time}</span>
+                        <span className="text-slate-300">{booking.time}</span>
                       </div>
 
                       <div className="flex items-start gap-3 text-sm">
                         <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                        <span className="text-slate-300">{request.address}</span>
+                        <span className="text-slate-300">{booking.address}</span>
                       </div>
 
                       <div className="flex items-center gap-3 text-sm">
                         <User className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span className="text-slate-300 font-semibold">{request.customerName}</span>
+                        <span className="text-slate-300 font-semibold">{booking.userName}</span>
                         <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span className="text-slate-300">{request.customerPhone}</span>
+                        <span className="text-slate-300">{booking.userEmail}</span>
                       </div>
 
-                      {request.instructions && (
+                      {booking.instructions && (
                         <div className="p-3 bg-slate-900/50 rounded-lg border border-slate-800">
                           <p className="text-xs text-slate-400 font-semibold mb-1">Special Instructions</p>
-                          <p className="text-sm text-slate-300">{request.instructions}</p>
+                          <p className="text-sm text-slate-300">{booking.instructions}</p>
                         </div>
                       )}
-                    </div>
 
-                    {/* Actions */}
-                    <div className="pt-4 border-t border-slate-800 flex gap-2">
-                      <button
-                        onClick={() => acceptRequest(request.id)}
-                        className="flex-1 px-4 py-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 font-semibold transition-all"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={() => rejectRequest(request.id)}
-                        className="flex-1 px-4 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:border-rose-500/50 font-semibold transition-all"
-                      >
-                        Reject
-                      </button>
+                      <div className="pt-4 border-t border-slate-800 flex gap-2">
+                        <button
+                          onClick={() => openChatForBooking(booking)}
+                          className="flex-1 px-4 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:border-cyan-500/50 font-semibold transition-all"
+                        >
+                          <span className="inline-flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4" />
+                            Open Chat
+                            {unreadCounts[String(booking._id)] > 0 && (
+                              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                                {unreadCounts[String(booking._id)]}
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -398,8 +515,8 @@ export default function ProviderDashboard() {
             ) : (
               <div className="py-20 text-center border border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
                 <Calendar className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-slate-300 mb-2">No Pending Requests</h3>
-                <p className="text-slate-400">You'll see new service requests here when customers request your services</p>
+                <h3 className="text-lg font-semibold text-slate-300 mb-2">No Bookings Yet</h3>
+                <p className="text-slate-400">You'll see all bookings assigned to this provider here</p>
               </div>
             )}
           </div>
@@ -408,65 +525,97 @@ export default function ProviderDashboard() {
         {/* Profile Tab */}
         {activeTab === 'profile' && (
           <div className="max-w-2xl bg-slate-900/40 border border-slate-800/60 rounded-2xl p-8 space-y-6">
-            <h2 className="text-2xl font-bold text-slate-100 border-b border-slate-800 pb-4">Provider Profile</h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">First Name</p>
-                <p className="text-lg text-slate-200 font-semibold">{user.firstName}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Last Name</p>
-                <p className="text-lg text-slate-200 font-semibold">{user.lastName}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Email</p>
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-emerald-400" />
-                  <p className="text-slate-300">{user.email}</p>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Phone</p>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-emerald-400" />
-                  <p className="text-slate-300">{user.phone || 'Not provided'}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Service Category</p>
-                <div className="flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-emerald-400" />
-                  <p className="text-slate-300">{user.skill || 'Not specified'}</p>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Experience</p>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
-                  <p className="text-slate-300">{user.experience || 0} years</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-6 border-t border-slate-800">
+            <div className="flex items-center justify-between gap-4 border-b border-slate-800 pb-4">
+              <h2 className="text-2xl font-bold text-slate-100">Provider Profile</h2>
               <button
-                onClick={handleLogout}
-                className="w-full px-6 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:border-rose-500/50 font-bold rounded-lg transition-all flex items-center justify-center gap-2"
+                onClick={() => setProfileEditMode((previous) => !previous)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-700 text-slate-300 hover:text-slate-100 hover:border-slate-600 transition-all"
               >
-                <LogOut className="w-5 h-5" />
-                Logout
+                <Edit2 className="w-4 h-4" />
+                {profileEditMode ? 'View Profile' : 'Edit Profile'}
               </button>
             </div>
+
+            {profileEditMode ? (
+              <form onSubmit={handleProfileSave} className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <ImageWithFallback
+                    src={avatarPreview}
+                    alt={`${profileForm.firstName || 'Provider'} avatar preview`}
+                    fallback={profileForm.firstName?.[0] || 'P'}
+                    className="w-24 h-24 rounded-2xl"
+                  />
+                  <div className="space-y-1.5 flex-1">
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Avatar Image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm text-slate-100 file:bg-emerald-500/10 file:border-0 file:text-emerald-400 file:font-semibold file:cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-1.5"><label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">First Name</label><input name="firstName" value={profileForm.firstName} onChange={handleProfileFieldChange} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm text-slate-100" /></div>
+                  <div className="space-y-1.5"><label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Last Name</label><input name="lastName" value={profileForm.lastName} onChange={handleProfileFieldChange} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm text-slate-100" /></div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-1.5"><label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Email</label><input name="email" type="email" value={profileForm.email} onChange={handleProfileFieldChange} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm text-slate-100" /></div>
+                  <div className="space-y-1.5"><label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Phone</label><input name="phone" value={profileForm.phone} onChange={handleProfileFieldChange} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm text-slate-100" /></div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-1.5"><label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Service Category</label><input name="skill" value={profileForm.skill} onChange={handleProfileFieldChange} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm text-slate-100" /></div>
+                  <div className="space-y-1.5"><label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Experience</label><input type="number" name="experience" value={profileForm.experience} onChange={handleProfileFieldChange} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm text-slate-100" /></div>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-900/50 border border-slate-800">
+                  <input type="checkbox" id="availability" name="availability" checked={profileForm.availability} onChange={handleProfileFieldChange} className="w-5 h-5 rounded-lg bg-slate-950 border border-slate-700 cursor-pointer accent-emerald-500" />
+                  <label htmlFor="availability" className="text-sm text-slate-300 cursor-pointer flex-1">I am available to accept service requests</label>
+                </div>
+
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setProfileEditMode(false)} className="flex-1 px-6 py-3 rounded-xl border border-slate-700 text-slate-300 hover:text-slate-100 transition-all">Cancel</button>
+                  <button type="submit" disabled={savingProfile} className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold disabled:opacity-60">
+                    <Save className="w-4 h-4" />
+                    {savingProfile ? 'Saving...' : 'Save Profile'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div><p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">First Name</p><p className="text-lg text-slate-200 font-semibold">{user.firstName}</p></div>
+                  <div><p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Last Name</p><p className="text-lg text-slate-200 font-semibold">{user.lastName}</p></div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div><p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Email</p><div className="flex items-center gap-2"><Mail className="w-4 h-4 text-emerald-400" /><p className="text-slate-300">{user.email}</p></div></div>
+                  <div><p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Phone</p><div className="flex items-center gap-2"><Phone className="w-4 h-4 text-emerald-400" /><p className="text-slate-300">{user.phone || 'Not provided'}</p></div></div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div><p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Service Category</p><div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-emerald-400" /><p className="text-slate-300">{user.skill || 'Not specified'}</p></div></div>
+                  <div><p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Experience</p><div className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /><p className="text-slate-300">{user.experience || 0} years</p></div></div>
+                </div>
+
+                <div className="pt-6 border-t border-slate-800">
+                  <button onClick={handleLogout} className="w-full px-6 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:border-rose-500/50 font-bold rounded-lg transition-all flex items-center justify-center gap-2"><LogOut className="w-5 h-5" />Logout</button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
+
+      <ChatBox
+        isOpen={Boolean(activeChatBooking)}
+        booking={activeChatBooking}
+        currentUser={user}
+        onClose={() => setActiveChatBooking(null)}
+      />
     </div>
   );
 }

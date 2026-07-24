@@ -98,6 +98,17 @@ function ServiceManagementContent() {
     });
   };
 
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    const file = files?.[0];
+    if (file) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: file,
+      }));
+    }
+  };
+
   const handleSave = async () => {
     try {
       if (!formData.serviceName || !formData.description || !formData.category || !formData.price || !formData.image) {
@@ -399,15 +410,20 @@ function ServiceManagementContent() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Image URL *
+                  Service Image *
                 </label>
                 <input
-                  type="url"
+                  type="file"
                   name="image"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 file:mr-4 file:rounded-md file:border-0 file:bg-cyan-600 file:px-3 file:py-2 file:text-white"
                 />
+                <p className="mt-1 text-xs text-slate-400">
+                  {typeof formData.image === 'string' && formData.image
+                    ? 'Current image will stay unless you choose a new file.'
+                    : formData.image?.name || 'Choose an image file to upload.'}
+                </p>
               </div>
             </div>
 

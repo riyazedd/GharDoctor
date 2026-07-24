@@ -1,5 +1,6 @@
 import { Menu } from 'lucide-react';
 import { useAdminLayout } from '../context/AdminLayoutContext';
+import ImageWithFallback from './ImageWithFallback';
 
 export default function AdminHeader({ title, subtitle, user }) {
   const { toggleSidebar } = useAdminLayout();
@@ -31,9 +32,12 @@ export default function AdminHeader({ title, subtitle, user }) {
               </p>
               <p className="text-xs text-slate-500">{user.email}</p>
             </div>
-            <div className="w-8 md:w-10 h-8 md:h-10 bg-linear-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base">
-              {user.firstName?.charAt(0)}
-            </div>
+            <ImageWithFallback
+              src={user.profileImg}
+              alt={`${user.firstName || 'User'} profile`}
+              fallback={user.firstName?.charAt(0) || 'U'}
+              className="w-8 md:w-10 h-8 md:h-10 rounded-full"
+            />
           </>
         )}
       </div>

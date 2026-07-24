@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import asyncHandler from './asyncHandler.js';
 import User from '../models/userModel.js';
+import ServiceProvider from '../models/serviceProviderModel.js';
 
 // User must be authenticated
 const protect = asyncHandler(async (req, res, next) => {
@@ -37,4 +38,32 @@ const admin = (req, res, next) => {
   }
 };
 
-export { protect, admin };
+const protectProvider = asyncHandler(async (req, res, next) => {
+  let token;
+
+  token = req.cookies.token;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      req.provider = await ServiceProvider.findById(decoded.userId).select('-password');
+
+      if (!req.provider) {
+        res.status(401);
+        throw new Error('Not authorized, provider not found');
+      }
+
+      next();
+    } catch (error) {
+      console.error(error);
+      res.status(401);
+      throw new Error('Not authorized, token failed');
+    }
+  } else {
+    res.status(401);
+    throw new Error('Not authorized, no token');
+  }
+});
+
+export { protect, admin, protectProvider };

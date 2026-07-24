@@ -1,5 +1,6 @@
 import asyncHandler from '../middleware/asyncHandler.js';
 import Service from '../models/serviceModel.js';
+import { parseBooleanField, parseNumberField, resolveUploadedImage } from '../utils/uploadUtils.js';
 
 // @desc    Get all services
 // @route   GET /api/services
@@ -26,17 +27,22 @@ const getServiceById = asyncHandler(async (req, res) => {
 // @route   POST /api/services
 // @access  Private/Admin
 const createService = asyncHandler(async (req, res) => {
-  const { serviceName, category, description, price, duration, image, rating, isAvailable } = req.body;
+  const { serviceName, category, description, price, duration, rating, isAvailable } = req.body;
+  const image = resolveUploadedImage(req, 'image');
+
+  if (!image) {
+    return res.status(400).json({ message: 'Service image is required' });
+  }
 
   const service = await Service.create({
     serviceName,
     category,
     description,
-    price,
+    price: parseNumberField(price),
     duration,
     image,
-    rating: rating || 4.5,
-    isAvailable: isAvailable !== undefined ? isAvailable : true
+    rating: parseNumberField(rating, 4.5),
+    isAvailable: parseBooleanField(isAvailable, true)
   });
 
   if (service) {
@@ -50,17 +56,24 @@ const createService = asyncHandler(async (req, res) => {
 // @route   PUT /api/services/:id
 // @access  Private/Admin
 const updateService = asyncHandler(async (req, res) => {
-  const service = await Service.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true, runValidators: true }
-  );
+  const service = await Service.findById(req.params.id);
 
-  if (service) {
-    res.json(service);
-  } else {
-    res.status(404).json({ message: 'Service not found' });
+  if (!service) {
+    return res.status(404).json({ message: 'Service not found' });
   }
+
+  service.serviceName = req.body.serviceName || service.serviceName;
+  service.category = req.body.category || service.category;
+  service.description = req.body.description || service.description;
+  service.price = req.body.price !== undefined ? parseNumberField(req.body.price, service.price) : service.price;
+  service.duration = req.body.duration || service.duration;
+  service.image = resolveUploadedImage(req, 'image', service.image);
+  service.rating = req.body.rating !== undefined ? parseNumberField(req.body.rating, service.rating) : service.rating;
+  service.isAvailable = req.body.isAvailable !== undefined ? parseBooleanField(req.body.isAvailable, service.isAvailable) : service.isAvailable;
+
+  const updatedService = await service.save();
+
+  res.json(updatedService);
 });
 
 // @desc    Delete a service

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Phone, Users, Briefcase, Award, FileText, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight, Upload } from 'lucide-react';
 import { authAPI, categoryAPI } from '../API';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 export default function ProviderRegisterPage() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export default function ProviderRegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [citizenshipImagePreview, setCitizenshipImagePreview] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -23,6 +25,7 @@ export default function ProviderRegisterPage() {
     skill: '',
     experience: '',
     citizenshipImage: null,
+    avatar: null,
     availability: true,
   });
 
@@ -48,16 +51,23 @@ export default function ProviderRegisterPage() {
   };
 
   const handleFileChange = (e) => {
+    const { name } = e.target;
     const file = e.target.files[0];
     if (file) {
-      // Read file as base64
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormData(prev => ({
           ...prev,
-          citizenshipImage: reader.result, // Store as base64
+          [name]: file,
         }));
-        setCitizenshipImagePreview(reader.result);
+
+        if (name === 'citizenshipImage') {
+          setCitizenshipImagePreview(reader.result);
+        }
+
+        if (name === 'avatar') {
+          setAvatarPreview(reader.result);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -109,7 +119,6 @@ export default function ProviderRegisterPage() {
     setLoading(true);
 
     try {
-      // Send provider registration with base64 image
       const response = await authAPI.registerProvider({
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -120,6 +129,7 @@ export default function ProviderRegisterPage() {
         experience: parseInt(formData.experience),
         availability: formData.availability,
         citizenshipImage: formData.citizenshipImage,
+        avatar: formData.avatar,
       });
 
       const data = response.data;
@@ -397,6 +407,33 @@ export default function ProviderRegisterPage() {
               {citizenshipImagePreview && (
                 <div className="mt-3 rounded-2xl overflow-hidden border border-emerald-500/20 bg-slate-900/50 p-2">
                   <img src={citizenshipImagePreview} alt="Preview" className="w-full h-32 object-cover rounded-xl" />
+                </div>
+              )}
+            </div>
+
+            {/* Avatar Upload */}
+            <div className="space-y-1.5">
+              <label htmlFor="avatar" className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">
+                Avatar Image
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
+                  <Upload className="w-5 h-5" />
+                </div>
+                <input
+                  type="file"
+                  id="avatar"
+                  name="avatar"
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  disabled={loading}
+                  className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500/50 text-slate-100 placeholder-slate-600 transition-all duration-200 file:bg-emerald-500/10 file:border-0 file:text-emerald-400 file:font-semibold file:cursor-pointer"
+                />
+              </div>
+              <p className="text-xs text-slate-400">Used in the navbar, dashboard, and provider cards.</p>
+              {avatarPreview && (
+                <div className="mt-3 w-28 h-28 rounded-full overflow-hidden border border-emerald-500/20 bg-slate-900/50 p-1">
+                  <ImageWithFallback src={avatarPreview} alt="Avatar preview" fallback="P" className="w-full h-full rounded-full" />
                 </div>
               )}
             </div>

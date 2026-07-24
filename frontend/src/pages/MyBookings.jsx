@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Calendar, Clock, MapPin, Phone, User,
-  CheckCircle, AlertCircle, Trash2, Home, ArrowRight
+  CheckCircle, AlertCircle, Trash2, Home, ArrowRight, MessageSquare
 } from 'lucide-react';
 import { bookingAPI } from '../API';
+import ChatBox from '../components/ChatBox';
+import useBookingChatNotifications from '../hooks/useBookingChatNotifications';
 
 export default function MyBookings() {
   const navigate = useNavigate();
@@ -18,6 +20,13 @@ export default function MyBookings() {
   const [loadingBookings, setLoadingBookings] = useState(true);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const [activeChatBooking, setActiveChatBooking] = useState(null);
+
+  const { unreadCounts, notification, clearUnreadForBooking, dismissNotification } = useBookingChatNotifications({
+    bookings,
+    currentUser: user,
+    activeBookingId: activeChatBooking?._id || null,
+  });
 
   // Check authentication on mount
   useEffect(() => {
@@ -64,6 +73,11 @@ export default function MyBookings() {
       setError('Failed to cancel booking');
       setTimeout(() => setError(''), 3000);
     }
+  };
+
+  const openChatForBooking = (booking) => {
+    setActiveChatBooking(booking);
+    clearUnreadForBooking(booking._id);
   };
 
   if (!user) {
@@ -123,6 +137,47 @@ export default function MyBookings() {
           </div>
         )}
 
+        {notification && (
+          <div className="fixed bottom-5 right-5 z-40 w-[calc(100vw-2rem)] max-w-sm rounded-2xl border border-cyan-500/30 bg-slate-950 shadow-2xl shadow-cyan-500/10 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-400 mb-1">New message</p>
+                <h3 className="text-sm font-bold text-slate-100">{notification.title}</h3>
+                <p className="text-sm text-slate-400 mt-1 line-clamp-2">{notification.message}</p>
+              </div>
+              <button
+                type="button"
+                onClick={dismissNotification}
+                className="text-slate-500 hover:text-slate-200 transition-colors"
+              >
+                <AlertCircle className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const booking = bookings.find((item) => String(item._id) === String(notification.bookingId));
+                  if (booking) {
+                    openChatForBooking(booking);
+                  }
+                  dismissNotification();
+                }}
+                className="flex-1 rounded-xl bg-cyan-500 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-cyan-400 transition-colors"
+              >
+                View Chat
+              </button>
+              <button
+                type="button"
+                onClick={dismissNotification}
+                className="rounded-xl border border-slate-800 px-4 py-2 text-sm font-semibold text-slate-300 hover:border-slate-700 hover:text-slate-100 transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Bookings Content */}
         <div>
           {loadingBookings ? (
@@ -142,15 +197,22 @@ export default function MyBookings() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="text-lg font-bold text-slate-100">{booking.serviceName}</h3>
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                          booking.status === 'Scheduled'
-                            ? 'bg-cyan-500/15 text-cyan-400'
-                            : booking.status === 'Completed'
-                              ? 'bg-emerald-500/15 text-emerald-400'
-                              : 'bg-slate-700/50 text-slate-400'
-                        }`}>
-                          {booking.status}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                            booking.status === 'Scheduled'
+                              ? 'bg-cyan-500/15 text-cyan-400'
+                              : booking.status === 'Completed'
+                                ? 'bg-emerald-500/15 text-emerald-400'
+                                : 'bg-slate-700/50 text-slate-400'
+                          }`}>
+                            {booking.status}
+                          </span>
+                          {unreadCounts[String(booking._id)] > 0 && (
+                            <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                              {unreadCounts[String(booking._id)]}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <p className="text-sm text-slate-400">{booking.category}</p>
                       <p className="text-xs text-slate-500 mt-1">ID: {booking.bookingId}</p>
@@ -191,8 +253,21 @@ export default function MyBookings() {
                   </div>
 
                   {/* Actions */}
-                  {booking.status === 'Scheduled' && (
-                    <div className="pt-4 border-t border-slate-800 flex gap-2">
+                  <div className="pt-4 border-t border-slate-800 flex gap-2 flex-col sm:flex-row">
+                    <button
+                      onClick={() => openChatForBooking(booking)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:border-cyan-500/50 font-semibold transition-all"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      Open Chat
+                      {unreadCounts[String(booking._id)] > 0 && (
+                        <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                          {unreadCounts[String(booking._id)]}
+                        </span>
+                      )}
+                    </button>
+
+                    {booking.status === 'Scheduled' && (
                       <button
                         onClick={() => cancelBooking(booking._id)}
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:border-rose-500/50 font-semibold transition-all"
@@ -200,8 +275,8 @@ export default function MyBookings() {
                         <Trash2 className="w-4 h-4" />
                         Cancel Booking
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -220,6 +295,13 @@ export default function MyBookings() {
           )}
         </div>
       </div>
+
+      <ChatBox
+        isOpen={Boolean(activeChatBooking)}
+        booking={activeChatBooking}
+        currentUser={user}
+        onClose={() => setActiveChatBooking(null)}
+      />
     </div>
   );
 }

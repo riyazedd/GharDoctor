@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X, LogOut, ShieldCheck, Calendar, Home, Wrench, ChevronDown, LayoutDashboard, BookOpen } from 'lucide-react';
 import { bookingAPI } from '../API';
+import ImageWithFallback from './ImageWithFallback';
 
 export default function Navbar({ currentView }) {
   const navigate = useNavigate();
@@ -64,6 +65,8 @@ export default function Navbar({ currentView }) {
           : { name: 'My Bookings', href: '/my-bookings', icon: BookOpen }
       ]
     : navigation;
+
+  const accountImage = user?.avatar || user?.profileImg;
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -159,9 +162,12 @@ export default function Navbar({ currentView }) {
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all duration-200 cursor-pointer group"
                 >
-                  <div className="w-7 h-7 rounded-full bg-linear-to-tr from-cyan-400 to-blue-500 flex items-center justify-center text-slate-950 font-bold text-xs uppercase shadow-inner">
-                    {user.firstName?.[0] || 'U'}
-                  </div>
+                  <ImageWithFallback
+                    src={accountImage}
+                    alt={`${user.firstName || 'User'} account`}
+                    fallback={user.firstName?.[0] || 'U'}
+                    className="w-7 h-7 rounded-full shadow-inner"
+                  />
                   <span className="text-sm font-semibold text-slate-200">
                     {user.firstName}
                   </span>
@@ -273,9 +279,7 @@ export default function Navbar({ currentView }) {
               {isAuthenticated && user ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 py-1">
-                    <div className="w-8 h-8 rounded-full bg-linear-to-tr from-cyan-400 to-blue-500 flex items-center justify-center text-slate-950 font-bold uppercase text-sm">
-                      {user.firstName?.[0] || 'U'}
-                    </div>
+                    <ImageWithFallback src={accountImage} alt={`${user.firstName || 'User'} account`} fallback={user.firstName?.[0] || 'U'} className="w-8 h-8 rounded-full" />
                     <div>
                       <p className="text-sm font-semibold text-slate-200">{user.firstName} {user.lastName}</p>
                       <p className="text-xs text-slate-500">{user.email}</p>

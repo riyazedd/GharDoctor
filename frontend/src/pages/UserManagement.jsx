@@ -3,6 +3,7 @@ import { Edit2, Trash2, Plus, X, Save, Search } from 'lucide-react';
 import { userAPI } from '../API';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminHeader from '../components/AdminHeader';
+import ImageWithFallback from '../components/ImageWithFallback';
 import { AdminLayoutProvider, useAdminLayout } from '../context/AdminLayoutContext';
 
 function UserManagementContent() {
@@ -97,6 +98,17 @@ function UserManagementContent() {
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
     });
+  };
+
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    const file = files?.[0];
+    if (file) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: file,
+      }));
+    }
   };
 
   const handleSave = async () => {
@@ -220,6 +232,7 @@ function UserManagementContent() {
                 <table className="w-full text-xs sm:text-sm">
                   <thead className="bg-slate-900/50 border-b border-slate-700/50">
                     <tr>
+                      <th className="hidden sm:table-cell px-6 py-3 text-left font-semibold text-slate-300">Profile</th>
                       <th className="px-3 sm:px-6 py-2 sm:py-3 text-left font-semibold text-slate-300">Name</th>
                       <th className="hidden sm:table-cell px-6 py-3 text-left font-semibold text-slate-300">Email</th>
                       <th className="hidden md:table-cell px-6 py-3 text-left font-semibold text-slate-300">Phone</th>
@@ -231,6 +244,14 @@ function UserManagementContent() {
                   <tbody>
                     {filteredUsers.map((user) => (
                       <tr key={user._id} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition">
+                        <td className="hidden sm:table-cell px-6 py-4">
+                          <ImageWithFallback
+                            src={user.profileImg}
+                            alt={`${user.firstName} ${user.lastName} profile`}
+                            fallback={user.firstName?.[0] || 'U'}
+                            className="w-10 h-10 rounded-full"
+                          />
+                        </td>
                         <td className="px-3 sm:px-6 py-2 sm:py-4 text-slate-100">
                           <div className="font-semibold text-slate-100 truncate">
                             {user.firstName} {user.lastName}
@@ -396,15 +417,30 @@ function UserManagementContent() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Profile Image URL
+                  Profile Image
                 </label>
+                {typeof formData.profileImg === 'string' && formData.profileImg && (
+                  <div className="mb-2">
+                    <ImageWithFallback
+                      src={formData.profileImg}
+                      alt={`${formData.firstName || 'User'} profile preview`}
+                      fallback={formData.firstName?.[0] || 'U'}
+                      className="w-20 h-20 rounded-full"
+                    />
+                  </div>
+                )}
                 <input
-                  type="url"
+                  type="file"
                   name="profileImg"
-                  value={formData.profileImg}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 file:mr-4 file:rounded-md file:border-0 file:bg-cyan-600 file:px-3 file:py-2 file:text-white"
                 />
+                <p className="mt-1 text-xs text-slate-400">
+                  {typeof formData.profileImg === 'string' && formData.profileImg
+                    ? 'Current image will stay unless you choose a new file.'
+                    : formData.profileImg?.name || 'Choose an image file to upload.'}
+                </p>
               </div>
 
               <div className="flex items-center gap-3 pt-2">

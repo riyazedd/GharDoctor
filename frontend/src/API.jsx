@@ -6,6 +6,25 @@ const API = axios.create({
   withCredentials: true, // Send cookies with every request
 });
 
+const toFormData = (payload) => {
+  const formData = new FormData();
+
+  Object.entries(payload || {}).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return;
+    }
+
+    if (value instanceof File) {
+      formData.append(key, value);
+      return;
+    }
+
+    formData.append(key, typeof value === 'boolean' || typeof value === 'number' ? String(value) : value);
+  });
+
+  return formData;
+};
+
 // ==================== AUTH ENDPOINTS ====================
 export const authAPI = {
   // User/Admin login
@@ -18,11 +37,11 @@ export const authAPI = {
 
   // User registration
   registerUser: (userData) =>
-    API.post("/api/users", userData),
+    API.post("/api/users/register", toFormData(userData)),
 
   // Provider registration
   registerProvider: (providerData) =>
-    API.post("/api/service-providers/register", providerData),
+    API.post("/api/service-providers/register", toFormData(providerData)),
 };
 
 // ==================== USER ENDPOINTS ====================
@@ -37,11 +56,15 @@ export const userAPI = {
 
   // Create new user (admin only)
   createUser: (userData) =>
-    API.post("/api/users", userData),
+    API.post("/api/users", toFormData(userData)),
 
   // Update user profile
   updateUser: (id, userData) =>
-    API.put(`/api/users/${id}`, userData),
+    API.put(`/api/users/${id}`, toFormData(userData)),
+
+  // Update logged-in user profile
+  updateProfile: (userData) =>
+    API.put('/api/users/profile', toFormData(userData)),
 
   // Delete user (admin only)
   deleteUser: (id) =>
@@ -60,11 +83,15 @@ export const providerAPI = {
 
   // Create new provider (admin only)
   createProvider: (providerData) =>
-    API.post("/api/service-providers", providerData),
+    API.post("/api/service-providers", toFormData(providerData)),
 
   // Update provider profile
   updateProvider: (id, providerData) =>
-    API.put(`/api/service-providers/${id}`, providerData),
+    API.put(`/api/service-providers/${id}`, toFormData(providerData)),
+
+  // Update logged-in provider profile
+  updateMyProfile: (providerData) =>
+    API.put('/api/service-providers/profile', toFormData(providerData)),
 
   // Delete provider (admin only)
   deleteProvider: (id) =>
@@ -83,11 +110,11 @@ export const serviceAPI = {
 
   // Create new service (admin only)
   createService: (serviceData) =>
-    API.post("/api/services", serviceData),
+    API.post("/api/services", toFormData(serviceData)),
 
   // Update service
   updateService: (id, serviceData) =>
-    API.put(`/api/services/${id}`, serviceData),
+    API.put(`/api/services/${id}`, toFormData(serviceData)),
 
   // Delete service (admin only)
   deleteService: (id) =>

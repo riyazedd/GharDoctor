@@ -57,37 +57,25 @@ export default function RegisterPage() {
     }
 
     try {
-      // Convert image file to base64
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        try {
-          const base64Image = reader.result;
-          
-          const response = await authAPI.registerUser({
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: formData.email,
-            phone: formData.phone,
-            address: formData.address,
-            password: formData.password,
-            profileImg: base64Image,
-          });
+      const response = await authAPI.registerUser({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        password: formData.password,
+        profileImg: formData.profileImg,
+      });
 
-          const data = response.data;
-          setSuccess('Account created successfully! Redirecting...');
-          
-          // Store user info (token is now in HTTP-Only cookie)
-          localStorage.setItem('user', JSON.stringify(data));
-          
-          setTimeout(() => {
-            navigate('/');
-          }, 1500);
-        } catch (err) {
-          setError(err.response?.data?.message || err.message || 'Registration failed');
-          setLoading(false);
-        }
-      };
-      reader.readAsDataURL(formData.profileImg);
+      const data = response.data;
+      setSuccess('Account created successfully! Redirecting...');
+
+      // Store user info (token is now in HTTP-Only cookie)
+      localStorage.setItem('user', JSON.stringify(data));
+
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
     } catch (err) {
       setError(err.message || 'Registration failed');
       setLoading(false);
