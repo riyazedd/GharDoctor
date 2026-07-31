@@ -26,10 +26,10 @@ export default function ServiceCard({ service, onBookNow }) {
             <h3 className="font-bold text-slate-200 group-hover:text-cyan-400 transition-colors text-base line-clamp-1">
               {service.serviceName}
             </h3>
-            <div className="flex items-center gap-1 text-amber-400 text-xs font-semibold shrink-0">
+            {/* <div className="flex items-center gap-1 text-amber-400 text-xs font-semibold shrink-0">
               <Star className="w-3.5 h-3.5 fill-amber-400 text-transparent" />
               <span>{service.rating || 4.5}</span>
-            </div>
+            </div> */}
           </div>
           <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">
             {service.description}

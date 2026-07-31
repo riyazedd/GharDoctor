@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, X, Save } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X, Save, ShieldCheck, ShieldOff } from 'lucide-react';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminHeader from '../components/AdminHeader';
 import ImageWithFallback from '../components/ImageWithFallback';
@@ -189,10 +189,23 @@ const ServiceProviderManagementContent = () => {
     }
   };
 
+  const handleToggleVerify = async (providerId) => {
+    try {
+      const response = await providerAPI.toggleVerification(providerId);
+      const updated = response.data.provider;
+      setProviders(providers.map((p) =>
+        p._id === providerId ? { ...p, isVerified: updated.isVerified } : p
+      ));
+    } catch (err) {
+      console.error('Error toggling verification:', err);
+      setError('Failed to update verification status');
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-950">
       <AdminSidebar />
-      <div className="flex-1">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <AdminHeader title="Service Provider Management" subtitle="Manage all service providers" user={user} />
 
         <div className="p-3 sm:p-4 md:p-8">
@@ -237,8 +250,8 @@ const ServiceProviderManagementContent = () => {
               <p className="text-slate-400 text-sm sm:text-base">No providers found</p>
             </div>
           ) : (
-            <div className="overflow-x-auto bg-slate-800/50 border border-slate-700/50 rounded-lg shadow">
-              <table className="w-full text-xs sm:text-sm">
+            <div className="w-full overflow-x-auto rounded-xl border border-slate-700/50 bg-slate-800/50 shadow">
+              <table className="min-w-full table-fixed text-xs sm:text-sm">
                 <thead className="bg-slate-900/50 border-b border-slate-700/50">
                   <tr>
                     <th className="hidden xl:table-cell px-6 py-3 text-left font-semibold text-slate-300">Avatar</th>
@@ -249,6 +262,7 @@ const ServiceProviderManagementContent = () => {
                     <th className="hidden lg:table-cell px-6 py-3 text-left font-semibold text-slate-300">Skill</th>
                     <th className="hidden lg:table-cell px-6 py-3 text-left font-semibold text-slate-300">Experience</th>
                     <th className="hidden sm:table-cell px-6 py-3 text-left font-semibold text-slate-300">Availability</th>
+                    <th className="hidden sm:table-cell px-6 py-3 text-left font-semibold text-slate-300">ID Verified</th>
                     <th className="px-3 sm:px-6 py-2 sm:py-3 text-center font-semibold text-slate-300">Actions</th>
                   </tr>
                 </thead>
@@ -272,15 +286,15 @@ const ServiceProviderManagementContent = () => {
                         />
                       </td>
                       <td className="px-3 sm:px-6 py-2 sm:py-4 text-slate-100">
-                        <div className="font-semibold text-slate-100 truncate">
+                        <div className="max-w-45 truncate font-semibold text-slate-100">
                           {provider.firstName} {provider.lastName}
                         </div>
                         <div className="text-xs text-slate-400 sm:hidden">{provider.skill}</div>
                       </td>
-                      <td className="hidden sm:table-cell px-6 py-4 text-slate-100 truncate">{provider.email}</td>
-                      <td className="hidden md:table-cell px-6 py-4 text-slate-100">{provider.phone}</td>
-                      <td className="hidden lg:table-cell px-6 py-4 text-slate-100">{provider.skill}</td>
-                      <td className="hidden lg:table-cell px-6 py-4 text-slate-100">{provider.experience} years</td>
+                      <td className="hidden sm:table-cell max-w-55 truncate px-6 py-4 text-slate-100">{provider.email}</td>
+                      <td className="hidden md:table-cell whitespace-nowrap px-6 py-4 text-slate-100">{provider.phone}</td>
+                      <td className="hidden lg:table-cell max-w-35 truncate px-6 py-4 text-slate-100">{provider.skill}</td>
+                      <td className="hidden lg:table-cell whitespace-nowrap px-6 py-4 text-slate-100">{provider.experience} years</td>
                       <td className="hidden sm:table-cell px-6 py-4">
                         <span
                           className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${
@@ -292,8 +306,34 @@ const ServiceProviderManagementContent = () => {
                           {provider.availability ? 'Available' : 'Unavailable'}
                         </span>
                       </td>
-                      <td className="px-3 sm:px-6 py-2 sm:py-4 text-center">
+                      <td className="hidden sm:table-cell px-6 py-4">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${
+                            provider.isVerified
+                              ? 'bg-emerald-500/10 text-emerald-400'
+                              : 'bg-amber-500/10 text-amber-400'
+                          }`}
+                        >
+                          {provider.isVerified
+                            ? <><ShieldCheck className="w-3 h-3" /> Verified</>
+                            : <><ShieldOff className="w-3 h-3" /> Pending</>}
+                        </span>
+                      </td>
+                      <td className="w-40 px-3 sm:px-6 py-2 sm:py-4 text-center">
                         <div className="flex items-center justify-center gap-2 sm:gap-3">
+                          <button
+                            onClick={() => handleToggleVerify(provider._id)}
+                            className={`p-1.5 sm:p-2 rounded-lg transition ${
+                              provider.isVerified
+                                ? 'text-amber-400 hover:bg-amber-500/10'
+                                : 'text-emerald-400 hover:bg-emerald-500/10'
+                            }`}
+                            title={provider.isVerified ? 'Revoke verification' : 'Manually verify'}
+                          >
+                            {provider.isVerified
+                              ? <ShieldOff className="w-4 h-4" />
+                              : <ShieldCheck className="w-4 h-4" />}
+                          </button>
                           <button
                             onClick={() => handleEdit(provider)}
                             className="p-1.5 sm:p-2 text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition"

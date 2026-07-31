@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MapPin, Phone, Mail, Briefcase, Award, Clock, CheckCircle, ArrowLeft } from 'lucide-react';
-import { providerAPI } from '../API';
+import { providerAPI, serviceAPI } from '../API';
+import Rating from '../components/Rating';
+import StarRatingInput from '../components/StarRatingInput';
 
 export default function ProviderProfile() {
   const { id } = useParams();
@@ -9,6 +11,12 @@ export default function ProviderProfile() {
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [matchingService, setMatchingService] = useState(null);
+  const [serviceLookupLoading, setServiceLookupLoading] = useState(true);
+  const [ratingValue, setRatingValue] = useState(5);
+  const [ratingMessage, setRatingMessage] = useState('');
+  const [ratingError, setRatingError] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
 
   useEffect(() => {
     const fetchProvider = async () => {
@@ -26,6 +34,33 @@ export default function ProviderProfile() {
 
     fetchProvider();
   }, [id]);
+
+  useEffect(() => {
+    const fetchMatchingService = async () => {
+      if (!provider?.skill) {
+        setMatchingService(null);
+        setServiceLookupLoading(false);
+        return;
+      }
+
+      setServiceLookupLoading(true);
+      try {
+        const response = await serviceAPI.getAllServices();
+        const matched = response.data.find(
+          (service) => service.category?.toLowerCase() === provider.skill.toLowerCase()
+        );
+        setMatchingService(matched || null);
+      } catch (err) {
+        console.error('Error fetching matching service:', err);
+        setMatchingService(null);
+      }
+      finally {
+        setServiceLookupLoading(false);
+      }
+    };
+
+    fetchMatchingService();
+  }, [provider]);
 
   if (loading) {
     return (
@@ -58,7 +93,31 @@ export default function ProviderProfile() {
   }
 
   const handleBooking = () => {
-    navigate('/booking', { state: { selectedProviderId: provider._id, shouldAutoSelectProvider: true } });
+    navigate('/booking', {
+      state: {
+        service: matchingService || undefined,
+        selectedProviderId: provider._id,
+        shouldAutoSelectProvider: true,
+      },
+    });
+  };
+
+  const handleRatingSubmit = async (event) => {
+    event.preventDefault();
+
+    setRatingError('');
+    setRatingMessage('');
+    setSubmittingRating(true);
+
+    try {
+      const response = await providerAPI.rateProvider(provider._id, { rating: ratingValue });
+      setProvider(response.data.provider);
+      setRatingMessage(response.data.message || 'Rating submitted successfully');
+    } catch (err) {
+      setRatingError(err.response?.data?.message || 'Failed to submit rating');
+    } finally {
+      setSubmittingRating(false);
+    }
   };
 
   return (
@@ -126,6 +185,13 @@ export default function ProviderProfile() {
               <div className="flex items-center gap-2 text-slate-300">
                 <Award className="w-5 h-5 text-yellow-500" />
                 <span className="text-lg font-semibold">{provider.experience || 0}+ Years of Experience</span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/50 px-4 py-3">
+                <Rating
+                  value={provider.rating || 0}
+                  text={`${(provider.rating || 0).toFixed(1)} average from ${provider.reviews || 0} reviews`}
+                />
               </div>
             </div>
           </div>
@@ -211,17 +277,55 @@ export default function ProviderProfile() {
               </div>
             </div>
 
+            <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 space-y-4">
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-slate-100">Rate this provider</h3>
+                <p className="text-xs text-slate-400">Share your experience after a booking. Your rating updates the provider average instantly.</p>
+              </div>
+
+              <form onSubmit={handleRatingSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <StarRatingInput rating={ratingValue} setRating={setRatingValue} />
+                  <p className="text-xs text-slate-500">Selected rating: {ratingValue}/5</p>
+                </div>
+
+                {ratingError && (
+                  <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-400">
+                    {ratingError}
+                  </div>
+                )}
+
+                {ratingMessage && (
+                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+                    {ratingMessage}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submittingRating}
+                  className="w-full rounded-xl bg-linear-to-r from-cyan-500 to-blue-600 px-4 py-3 font-bold text-slate-950 transition-all hover:from-cyan-400 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {submittingRating ? 'Submitting...' : 'Submit Rating'}
+                </button>
+              </form>
+            </div>
+
             {/* Booking CTA */}
             <button
               onClick={handleBooking}
-              disabled={!provider.availability}
+              disabled={!provider.availability || serviceLookupLoading}
               className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all ${
-                provider.availability
+                provider.availability && !serviceLookupLoading
                   ? 'bg-linear-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 active:scale-95'
                   : 'bg-slate-800 text-slate-400 cursor-not-allowed opacity-50'
               }`}
             >
-              {provider.availability ? 'Book This Provider' : 'Currently Unavailable'}
+              {serviceLookupLoading
+                ? 'Resolving Booking Option...'
+                : provider.availability
+                ? 'Book This Provider'
+                : 'Currently Unavailable'}
             </button>
 
             {/* Verification Badge */}

@@ -6,6 +6,7 @@ import {
   getBookingById,
   updateBooking,
   cancelBooking,
+  deleteBooking,
   getProviderBookings,
   getAvailableTimeSlots,
 } from "../controller/bookingController.js";
@@ -34,6 +35,9 @@ router.get("/:id", getBookingById);
 router.put("/:id", updateBooking);
 
 // Cancel booking
-router.delete("/:id", cancelBooking);
+router.put("/:id/cancel", cancelBooking);
+
+// Delete booking
+router.delete("/:id", deleteBooking);
 
 export default router;

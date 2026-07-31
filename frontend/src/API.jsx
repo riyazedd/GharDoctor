@@ -42,6 +42,9 @@ export const authAPI = {
   // Provider registration
   registerProvider: (providerData) =>
     API.post("/api/service-providers/register", toFormData(providerData)),
+
+  // Clear the HTTP-only authentication cookie
+  logout: () => API.post('/api/users/logout'),
 };
 
 // ==================== USER ENDPOINTS ====================
@@ -92,6 +95,14 @@ export const providerAPI = {
   // Update logged-in provider profile
   updateMyProfile: (providerData) =>
     API.put('/api/service-providers/profile', toFormData(providerData)),
+
+  // Rate a provider
+  rateProvider: (id, ratingData) =>
+    API.post(`/api/service-providers/${id}/rating`, ratingData),
+
+  // Toggle provider verification status (admin)
+  toggleVerification: (id) =>
+    API.patch(`/api/service-providers/${id}/verify`),
 
   // Delete provider (admin only)
   deleteProvider: (id) =>
@@ -172,7 +183,10 @@ export const bookingAPI = {
 
   // Cancel booking
   cancelBooking: (id) =>
-    API.delete(`/api/bookings/${id}`),
+    API.put(`/api/bookings/${id}/cancel`),
+
+  deleteBooking: (bookingId) =>
+  API.delete(`/api/bookings/${bookingId}`),
 };
 
 export default API;

@@ -14,6 +14,8 @@ export default function ProviderRegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [citizenshipImagePreview, setCitizenshipImagePreview] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
+  const [ocrWarning, setOcrWarning] = useState('');
+  const [ocrIsNameMismatch, setOcrIsNameMismatch] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -133,14 +135,24 @@ export default function ProviderRegisterPage() {
       });
 
       const data = response.data;
-      setSuccess('Registration successful! Logging you in...');
+
+      // Check OCR verification result from server
+      if (data.ocrVerification && !data.ocrVerification.verified) {
+        setOcrWarning(data.ocrVerification.message);
+        // Track whether it was specifically a name mismatch for targeted UI
+        setOcrIsNameMismatch(
+          data.ocrVerification.keywordMatch === true && data.ocrVerification.nameMatch === false
+        );
+      }
+
+      setSuccess('Registration successful! Redirecting to Login Page');
       
       // Store provider info (token is now in HTTP-Only cookie)
       localStorage.setItem('user', JSON.stringify(data));
 
       setTimeout(() => {
-        navigate('/');
-      }, 2000);
+        navigate('/login');
+      }, 3000);
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Registration failed. Please try again.');
     } finally {
@@ -175,6 +187,24 @@ export default function ProviderRegisterPage() {
               <div className="flex items-center gap-2.5 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
                 <CheckCircle className="w-5 h-5 shrink-0" />
                 <p>{success}</p>
+              </div>
+            )}
+
+            {ocrWarning && (
+              <div className={`flex items-start gap-2.5 p-4 rounded-2xl text-sm border ${
+                ocrIsNameMismatch
+                  ? 'bg-orange-500/10 border-orange-500/20 text-orange-300'
+                  : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
+              }`}>
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold mb-0.5">
+                    {ocrIsNameMismatch ? 'Name Mismatch — Pending Review' : 'Citizenship Verification Pending'}
+                  </p>
+                  <p className={ocrIsNameMismatch ? 'text-orange-400/80' : 'text-amber-400/80'}>
+                    {ocrWarning}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -389,6 +419,10 @@ export default function ProviderRegisterPage() {
               <label htmlFor="citizenshipImage" className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">
                 Citizenship/ID Image
               </label>
+              <p className="text-xs text-slate-500 pl-1 -mt-0.5">
+                Upload a clear photo of your Nepali Citizenship Certificate.
+                OCR will verify the document type <span className="text-amber-400/80 font-medium">and confirm your registered name matches</span> the card.
+              </p>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
                   <FileText className="w-5 h-5" />
@@ -407,6 +441,10 @@ export default function ProviderRegisterPage() {
               {citizenshipImagePreview && (
                 <div className="mt-3 rounded-2xl overflow-hidden border border-emerald-500/20 bg-slate-900/50 p-2">
                   <img src={citizenshipImagePreview} alt="Preview" className="w-full h-32 object-cover rounded-xl" />
+                  <div className="mt-2 flex items-center gap-1.5 px-1">
+                    <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                    <span className="text-xs text-amber-400 font-medium">Pending OCR Verification — will be checked on submit</span>
+                  </div>
                 </div>
               )}
             </div>

@@ -2,13 +2,19 @@ import { useState, useEffect } from 'react';
 import { Users, UserCheck, Briefcase, Settings, LogOut, Menu, X, Activity, Tags } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAdminLayout } from '../context/AdminLayoutContext';
+import { authAPI } from '../API';
 
 export default function AdminSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isMobile, sidebarOpen, setSidebarOpen } = useAdminLayout();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+    } catch (error) {
+      console.error('Error clearing session cookie:', error);
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/login');

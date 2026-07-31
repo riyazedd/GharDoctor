@@ -153,6 +153,8 @@ const cancelBooking = asyncHandler(async (req, res) => {
   res.json(cancelledBooking);
 });
 
+
+
 // @desc    Get all bookings for a service provider
 // @route   GET /api/bookings/provider/:providerId
 // @access  Private
@@ -164,6 +166,34 @@ const getProviderBookings = asyncHandler(async (req, res) => {
   });
 
   res.json(bookings);
+});
+
+const deleteBooking = asyncHandler(async (req, res) => {
+  const booking = await Booking.findById(req.params.id);
+
+  if (!booking) {
+    return res.status(404).json({
+      success: false,
+      message: "Booking not found",
+    });
+  }
+
+  if (
+    booking.status !== "Cancelled" &&
+    booking.status !== "Completed"
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Only cancelled or completed bookings can be deleted.",
+    });
+  }
+
+  await booking.deleteOne();
+
+  res.status(200).json({
+    success: true,
+    message: "Booking deleted successfully.",
+  });
 });
 
 // @desc    Get available time slots for a provider on a specific date
@@ -208,6 +238,7 @@ export {
   getBookingById,
   updateBooking,
   cancelBooking,
+  deleteBooking,
   getProviderBookings,
   getAvailableTimeSlots,
 };

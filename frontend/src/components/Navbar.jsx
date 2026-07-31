@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X, LogOut, ShieldCheck, Calendar, Home, Wrench, ChevronDown, LayoutDashboard, BookOpen } from 'lucide-react';
-import { bookingAPI } from '../API';
+import { authAPI, bookingAPI } from '../API';
 import ImageWithFallback from './ImageWithFallback';
 
 export default function Navbar({ currentView }) {
@@ -68,7 +68,12 @@ export default function Navbar({ currentView }) {
 
   const accountImage = user?.avatar || user?.profileImg;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+    } catch (error) {
+      console.error('Error clearing session cookie:', error);
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setIsAuthenticated(false);

@@ -95,7 +95,7 @@ export default function BookingSuccess({ bookingDetails }) {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
           <button
-            onClick={() => navigate('/bookings')}
+            onClick={() => navigate('/my-bookings')}
             className="w-full sm:w-auto px-6 py-3 bg-linear-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold rounded-2xl transition-all duration-200 cursor-pointer text-sm tracking-wide active:scale-95 shadow-lg shadow-cyan-500/10"
           >
             View Bookings

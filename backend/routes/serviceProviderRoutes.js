@@ -8,6 +8,8 @@ import {
   updateCurrentServiceProvider,
   deleteServiceProvider,
   toggleProviderAvailability,
+  toggleProviderVerification,
+  rateServiceProvider,
   registerServiceProvider,
   loginServiceProvider,
 } from '../controller/serviceProviderController.js';
@@ -28,6 +30,7 @@ router.route('/profile').put(protectProvider, upload.fields([
   { name: 'citizenshipImage', maxCount: 1 },
   { name: 'avatar', maxCount: 1 },
 ]), updateCurrentServiceProvider);
+router.post('/:id/rating', protect, rateServiceProvider);
 router.get('/:id', getServiceProviderById);
 
 // Admin routes
@@ -41,5 +44,6 @@ router.put('/:id', protect, admin, upload.fields([
 ]), updateServiceProvider);
 router.delete('/:id', protect, admin, deleteServiceProvider);
 router.patch('/:id/availability', protect, admin, toggleProviderAvailability);
+router.patch('/:id/verify', protect, admin, toggleProviderVerification);
 
 export default router;

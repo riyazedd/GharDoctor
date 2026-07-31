@@ -2,6 +2,7 @@ import asyncHandler from "../middleware/asyncHandler.js";
 import ServiceProvider from "../models/serviceProviderModel.js";
 import generateToken from "../utils/generateToken.js";
 import { parseBooleanField, parseNumberField, resolveUploadedImage } from '../utils/uploadUtils.js';
+import { verifyCitizenshipImage, resolveUploadedFilePath } from '../utils/ocrService.js';
 
 // @desc    Get all service providers
 // @route   GET /api/service-providers
@@ -58,6 +59,11 @@ export const createServiceProvider = asyncHandler(async (req, res) => {
   if (existingProvider) {
     return res.status(400).json({ message: 'Email already registered' });
   }
+
+  // Run OCR on the uploaded citizenship image, matching against registered name
+  const citizenshipFilePath = resolveUploadedFilePath(req.files, 'citizenshipImage');
+  const ocrResult = await verifyCitizenshipImage(citizenshipFilePath, { firstName, lastName });
+  console.log('[OCR] Admin create — verified:', ocrResult.verified, '| keyword:', ocrResult.keywordMatch, '| nameMatch:', ocrResult.nameMatch, '|', ocrResult.reason);
   
   const provider = new ServiceProvider({
     firstName,
@@ -70,6 +76,7 @@ export const createServiceProvider = asyncHandler(async (req, res) => {
     citizenshipImage,
     ...(avatar ? { avatar } : {}),
     availability: true,
+    isVerified: true, // Admin-created providers are trusted as verified
   });
   
   await provider.save();
@@ -87,6 +94,7 @@ export const createServiceProvider = asyncHandler(async (req, res) => {
       availability: provider.availability,
       citizenshipImage: provider.citizenshipImage,
       avatar: provider.avatar,
+      isVerified: provider.isVerified,
     },
   });
 });
@@ -208,6 +216,20 @@ export const registerServiceProvider = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
+    // --- OCR Verification (Option B: soft-flag) ---
+    // Run OCR and compare both citizenship card keywords AND the registered name.
+    // If either check fails, the account is created but marked isVerified=false
+    // so an admin can review it manually.
+    const citizenshipFilePath = resolveUploadedFilePath(req.files, 'citizenshipImage');
+    const ocrResult = await verifyCitizenshipImage(citizenshipFilePath, { firstName, lastName });
+    const isVerified = ocrResult.verified;
+    console.log(
+      '[OCR] Self-register — verified:', isVerified,
+      '| keyword:', ocrResult.keywordMatch,
+      '| nameMatch:', ocrResult.nameMatch,
+      '|', ocrResult.reason
+    );
+
     const provider = new ServiceProvider({
       firstName,
       lastName,
@@ -219,12 +241,25 @@ export const registerServiceProvider = asyncHandler(async (req, res) => {
       citizenshipImage,
       ...(avatar ? { avatar } : {}),
       availability: availability !== undefined ? parseBooleanField(availability, true) : true,
+      isVerified,
     });
 
     await provider.save();
 
     // Generate token
     const token = generateToken(res, provider._id);
+
+    // Build a human-friendly OCR message for the frontend
+    let ocrMessage;
+    if (isVerified) {
+      ocrMessage = 'Your citizenship card was verified successfully and your name matches the document.';
+    } else if (!ocrResult.keywordMatch) {
+      ocrMessage = 'The uploaded image does not appear to be a Nepali Citizenship Certificate. Your account has been created and will be reviewed by an admin.';
+    } else if (!ocrResult.nameMatch) {
+      ocrMessage = `Your name "${firstName} ${lastName}" could not be confirmed on the uploaded citizenship card. ${ocrResult.nameMatchDetail} Your account has been created and will be reviewed by an admin.`;
+    } else {
+      ocrMessage = 'Citizenship card could not be automatically verified. Your account has been created and will be reviewed by an admin.';
+    }
 
     res.status(201).json({
       _id: provider._id,
@@ -241,6 +276,13 @@ export const registerServiceProvider = asyncHandler(async (req, res) => {
       citizenshipImage: provider.citizenshipImage,
       avatar: provider.avatar,
       isProvider: true,
+      isVerified: provider.isVerified,
+      ocrVerification: {
+        verified: isVerified,
+        keywordMatch: ocrResult.keywordMatch,
+        nameMatch: ocrResult.nameMatch,
+        message: ocrMessage,
+      },
       token,
     });
   } catch (error) {
@@ -275,6 +317,7 @@ export const loginServiceProvider = asyncHandler(async (req, res) => {
       citizenshipImage: provider.citizenshipImage,
       avatar: provider.avatar,
       isServiceProvider: provider.isServiceProvider,
+      isVerified: provider.isVerified,
       token: token,
     });
   } else {
@@ -302,6 +345,76 @@ export const toggleProviderAvailability = asyncHandler(async (req, res) => {
       firstName: provider.firstName,
       lastName: provider.lastName,
       availability: provider.availability,
+    },
+  });
+});
+
+// @desc    Toggle provider verification status (admin manually approves/revokes)
+// @route   PATCH /api/service-providers/:id/verify
+// @access  Private/Admin
+export const toggleProviderVerification = asyncHandler(async (req, res) => {
+  const provider = await ServiceProvider.findById(req.params.id);
+
+  if (!provider) {
+    return res.status(404).json({ message: 'Service provider not found' });
+  }
+
+  provider.isVerified = !provider.isVerified;
+  await provider.save();
+
+  res.status(200).json({
+    message: `Provider verification status updated to ${provider.isVerified ? 'Verified' : 'Unverified'}`,
+    provider: {
+      _id: provider._id,
+      firstName: provider.firstName,
+      lastName: provider.lastName,
+      isVerified: provider.isVerified,
+    },
+  });
+});
+
+// @desc    Rate a service provider
+// @route   POST /api/service-providers/:id/rating
+// @access  Private/User
+export const rateServiceProvider = asyncHandler(async (req, res) => {
+  const provider = await ServiceProvider.findById(req.params.id);
+
+  if (!provider) {
+    return res.status(404).json({ message: 'Service provider not found' });
+  }
+
+  const rating = Number(req.body.rating);
+
+  if (Number.isNaN(rating) || rating < 1 || rating > 5) {
+    return res.status(400).json({ message: 'Rating must be a number between 1 and 5' });
+  }
+
+  const existingReviews = provider.reviews || 0;
+  const existingRating = provider.rating || 0;
+  const updatedReviews = existingReviews + 1;
+  const updatedRating = ((existingRating * existingReviews) + rating) / updatedReviews;
+
+  provider.reviews = updatedReviews;
+  provider.rating = Number(updatedRating.toFixed(1));
+
+  await provider.save();
+
+  res.status(200).json({
+    message: 'Rating submitted successfully',
+    provider: {
+      _id: provider._id,
+      firstName: provider.firstName,
+      lastName: provider.lastName,
+      email: provider.email,
+      phone: provider.phone,
+      skill: provider.skill,
+      experience: provider.experience,
+      availability: provider.availability,
+      rating: provider.rating,
+      reviews: provider.reviews,
+      completedJobs: provider.completedJobs,
+      citizenshipImage: provider.citizenshipImage,
+      avatar: provider.avatar,
     },
   });
 });

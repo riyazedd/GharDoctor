@@ -17,6 +17,36 @@ export default function Home() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // The auth token is an HTTP-only cookie, so ask the server to validate it
+  // and return the signed-in account's role before displaying the homepage.
+  useEffect(() => {
+    const redirectAuthenticatedUser = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/session', {
+          credentials: 'include',
+        });
+
+        if (!response.ok) return;
+
+        const { role } = await response.json();
+        const dashboardByRole = {
+          admin: '/admin/dashboard',
+          provider: '/provider-dashboard',
+          user: '/',
+        };
+
+        if (dashboardByRole[role]) {
+          navigate(dashboardByRole[role], { replace: true });
+        }
+      } catch (error) {
+        // An unavailable API should not prevent guests from using the homepage.
+        console.error('Error checking active session:', error);
+      }
+    };
+
+    redirectAuthenticatedUser();
+  }, [navigate]);
+
   // Fetch categories from API
   useEffect(() => {
     const fetchCategories = async () => {
@@ -48,9 +78,6 @@ export default function Home() {
     navigate(`/services?category=${encodeURIComponent(categoryName)}`);
   };
 
-  const handleBookNow = (service) => {
-    navigate('/booking');
-  };
 
   return (
     <div className="space-y-24 pb-20">
@@ -61,11 +88,7 @@ export default function Home() {
         <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-80 h-80 rounded-full bg-blue-500/10 blur-[120px] pointer-events-none" />
 
         <div className="max-w-5xl mx-auto text-center space-y-8 relative z-10">
-          <div className="inline-flex items-center gap-2.5 px-4.5 py-2 rounded-full bg-slate-900 border border-slate-800 text-xs font-semibold text-cyan-400">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Premium Home Maintenance Made Simple</span>
-          </div>
-
+          
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-100 leading-tight tracking-tight max-w-4xl mx-auto">
             Your Trusted Professionals For{' '}
             <span className="bg-linear-to-r from-cyan-400 via-blue-500 to-indigo-500 bg-clip-text text-transparent">
@@ -148,23 +171,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. FEATURED SERVICES SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-slate-100 tracking-tight">Our Most Popular Services</h2>
-          <p className="text-slate-400 text-sm mt-2">Book top-rated, fully guaranteed services in one click</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {featuredServices.map((service) => (
-            <FeaturedServiceCard
-              key={service.id}
-              service={service}
-              onBookNow={handleBookNow}
-            />
-          ))}
-        </div>
-      </section>
 
       {/* 4. VALUE PROPOSITION SECTION */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

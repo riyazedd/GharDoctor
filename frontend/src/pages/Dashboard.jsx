@@ -4,7 +4,7 @@ import {
   User, Calendar, Clock, MapPin, Phone, Mail,
   CheckCircle, AlertCircle, Trash2, LogOut, Home
 } from 'lucide-react';
-import { bookingAPI } from '../API';
+import { authAPI, bookingAPI } from '../API';
 import ImageWithFallback from '../components/ImageWithFallback';
 
 export default function Dashboard() {
@@ -65,8 +65,13 @@ export default function Dashboard() {
     }
   };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
     if (window.confirm('Are you sure you want to logout?')) {
+      try {
+        await authAPI.logout();
+      } catch (error) {
+        console.error('Error clearing session cookie:', error);
+      }
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       navigate('/');

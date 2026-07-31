@@ -360,6 +360,7 @@ export default function Booking() {
                       required
                       value={bookingDate}
                       onChange={(e) => setBookingDate(e.target.value)}
+                      style={{ colorScheme: "light" }}
                       className="w-full pl-10 pr-4 py-2.5 bg-slate-955 border border-slate-800 focus:border-cyan-500/50 rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500/50 text-slate-200 transition-all cursor-pointer"
                     />
                   </div>
@@ -380,7 +381,7 @@ export default function Booking() {
                       onChange={(e) => setBookingTime(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 bg-slate-955 border border-slate-800 focus:border-cyan-500/50 rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500/50 text-slate-200 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <option value="">
+                      <option value="" className='text-black'>
                         {loadingSlots
                           ? 'Loading available slots...'
                           : !bookingDate
@@ -392,7 +393,7 @@ export default function Booking() {
                           : 'Select a time slot'}
                       </option>
                       {!loadingSlots && availableTimeSlots.map((slot) => (
-                        <option key={slot} value={slot}>
+                        <option key={slot} value={slot} className='text-black'>
                           {slot === '09:00 AM'
                             ? '09:00 AM - 11:00 AM (Morning)'
                             : slot === '11:30 AM'

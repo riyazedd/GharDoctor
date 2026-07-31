@@ -75,6 +75,27 @@ export default function MyBookings() {
     }
   };
 
+  const deleteBooking = async (bookingId) => {
+  if (!window.confirm("Are you sure you want to permanently delete this booking?")) {
+    return;
+  }
+
+  try {
+    await bookingAPI.deleteBooking(bookingId);
+
+    setBookings((prevBookings) =>
+      prevBookings.filter((booking) => booking._id !== bookingId)
+    );
+
+    setSuccess("Booking deleted successfully!");
+    setTimeout(() => setSuccess(""), 3000);
+  } catch (err) {
+    console.error("Error deleting booking:", err);
+    setError("Failed to delete booking");
+    setTimeout(() => setError(""), 3000);
+  }
+};
+
   const openChatForBooking = (booking) => {
     setActiveChatBooking(booking);
     clearUnreadForBooking(booking._id);
@@ -267,15 +288,23 @@ export default function MyBookings() {
                       )}
                     </button>
 
-                    {booking.status === 'Scheduled' && (
-                      <button
-                        onClick={() => cancelBooking(booking._id)}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:border-rose-500/50 font-semibold transition-all"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Cancel Booking
-                      </button>
-                    )}
+                    {booking.status === "Scheduled" ? (
+  <button
+    onClick={() => cancelBooking(booking._id)}
+    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:border-rose-500/50 font-semibold transition-all"
+  >
+    <Trash2 className="w-4 h-4" />
+    Cancel Booking
+  </button>
+) : (
+  <button
+    onClick={() => deleteBooking(booking._id)}
+    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-600/30 hover:border-red-600/50 font-semibold transition-all"
+  >
+    <Trash2 className="w-4 h-4" />
+    Delete Booking
+  </button>
+)}
                   </div>
                 </div>
               ))}

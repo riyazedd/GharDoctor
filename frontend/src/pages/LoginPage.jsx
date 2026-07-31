@@ -66,11 +66,11 @@ export default function LoginPage() {
     }
   };
 
-  const fillTestCredentials = (e) => {
-    e.preventDefault();
-    setEmail('admin@gmail.com');
-    setPassword('123456');
-  };
+  // const fillTestCredentials = (e) => {
+  //   e.preventDefault();
+  //   setEmail('admin@gmail.com');
+  //   setPassword('123456');
+  // };
 
   return (
     <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4 py-16 bg-radial from-slate-900 to-slate-950">
@@ -168,18 +168,6 @@ export default function LoginPage() {
 
           {/* Socials/Alternative signups */}
           <div className="mt-8 pt-6 border-t border-slate-800/80">
-            {/* Quick credentials filler */}
-            <div className="p-4 rounded-2xl bg-cyan-500/5 border border-cyan-500/10 mb-6 text-center">
-              <p className="text-xs text-slate-400 leading-normal mb-2.5">
-                Need to test the app? Use the seeded credentials:
-              </p>
-              <button
-                onClick={fillTestCredentials}
-                className="px-4 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-semibold rounded-xl transition-all duration-200"
-              >
-                Autofill Seed Credentials
-              </button>
-            </div>
 
             <p className="text-center text-sm text-slate-400">
               Don't have an account?{' '}

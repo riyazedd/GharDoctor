@@ -4,7 +4,7 @@ import {
   User, Briefcase, Star, CheckCircle, AlertCircle, LogOut, MessageSquare,
   Calendar, Clock, MapPin, Phone, Mail, Activity, TrendingUp, Power, Edit2, Save
 } from 'lucide-react';
-import { bookingAPI, providerAPI } from '../API';
+import { authAPI, bookingAPI, providerAPI } from '../API';
 import ChatBox from '../components/ChatBox';
 import useBookingChatNotifications from '../hooks/useBookingChatNotifications';
 import ImageWithFallback from '../components/ImageWithFallback';
@@ -89,8 +89,13 @@ export default function ProviderDashboard() {
     }
   }, [user]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (window.confirm('Are you sure you want to logout?')) {
+      try {
+        await authAPI.logout();
+      } catch (error) {
+        console.error('Error clearing session cookie:', error);
+      }
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       navigate('/');
@@ -160,6 +165,33 @@ export default function ProviderDashboard() {
     setActiveChatBooking(booking);
     clearUnreadForBooking(booking._id);
   };
+
+  const updateBookingStatus = async (bookingId, status) => {
+  if (
+    !window.confirm(
+      `Are you sure you want to mark this booking as ${status}?`
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const response = await bookingAPI.updateBooking(bookingId, { status });
+
+    setBookings((prev) =>
+      prev.map((booking) =>
+        booking._id === bookingId ? response.data : booking
+      )
+    );
+
+    setSuccess(`Booking ${status.toLowerCase()} successfully.`);
+    setTimeout(() => setSuccess(""), 3000);
+  } catch (err) {
+    console.error(err);
+    setError("Failed to update booking.");
+    setTimeout(() => setError(""), 3000);
+  }
+};
 
   if (!user) {
     return (
@@ -492,22 +524,49 @@ export default function ProviderDashboard() {
                         </div>
                       )}
 
-                      <div className="pt-4 border-t border-slate-800 flex gap-2">
-                        <button
-                          onClick={() => openChatForBooking(booking)}
-                          className="flex-1 px-4 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:border-cyan-500/50 font-semibold transition-all"
-                        >
-                          <span className="inline-flex items-center gap-2">
-                            <MessageSquare className="w-4 h-4" />
-                            Open Chat
-                            {unreadCounts[String(booking._id)] > 0 && (
-                              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                                {unreadCounts[String(booking._id)]}
-                              </span>
-                            )}
-                          </span>
-                        </button>
-                      </div>
+                      <div className="pt-4 border-t border-slate-800 space-y-3">
+  <button
+    onClick={() => openChatForBooking(booking)}
+    className="w-full px-4 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:border-cyan-500/50 font-semibold transition-all"
+  >
+    <span className="inline-flex items-center gap-2">
+      <MessageSquare className="w-4 h-4" />
+      Open Chat
+      {unreadCounts[String(booking._id)] > 0 && (
+        <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+          {unreadCounts[String(booking._id)]}
+        </span>
+      )}
+    </span>
+  </button>
+
+  {booking.status === "Scheduled" && (
+    <div className="grid grid-cols-2 gap-2">
+      <button
+        onClick={() => updateBookingStatus(booking._id, "Completed")}
+        className="px-4 py-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-semibold transition-all"
+      >
+        ✓ Complete
+      </button>
+
+      <button
+        onClick={() => updateBookingStatus(booking._id, "Cancelled")}
+        className="px-4 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-semibold transition-all"
+      >
+        ✕ Cancel
+      </button>
+    </div>
+  )}
+
+  {booking.status === "In Progress" && (
+    <button
+      onClick={() => updateBookingStatus(booking._id, "Completed")}
+      className="w-full px-4 py-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-semibold transition-all"
+    >
+      ✓ Mark as Completed
+    </button>
+  )}
+</div>
                     </div>
                   </div>
                 ))}

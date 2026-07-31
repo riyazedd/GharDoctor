@@ -17,6 +17,7 @@ import UserManagement from './pages/UserManagement'
 import ServiceProviderManagement from './pages/ServiceProviderManagement'
 import ServiceManagement from './pages/ServiceManagement'
 import CategoryManagement from './pages/CategoryManagement'
+import Chatbot from './components/Chatbot'
 
 function AppContent() {
   const location = useLocation();
@@ -48,6 +49,7 @@ function AppContent() {
         </Routes>
       </main>
       {!hideFooter && <Footer />}
+      {!hideNavbar && <Chatbot />}
     </>
   )
 }
