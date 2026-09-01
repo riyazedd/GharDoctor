@@ -11,7 +11,6 @@ import useBookingChatNotifications from '../hooks/useBookingChatNotifications';
 export default function MyBookings() {
   const navigate = useNavigate();
 
-  // Get user from localStorage
   const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
@@ -28,7 +27,6 @@ export default function MyBookings() {
     activeBookingId: activeChatBooking?._id || null,
   });
 
-  // Check authentication on mount
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
@@ -39,7 +37,6 @@ export default function MyBookings() {
       return;
     }
 
-    // Load bookings from API
     const fetchBookings = async () => {
       try {
         const response = await bookingAPI.getUserBookings(user._id);
@@ -62,7 +59,7 @@ export default function MyBookings() {
 
     try {
       await bookingAPI.cancelBooking(bookingId);
-      const updatedBookings = bookings.map(booking =>
+      const updatedBookings = bookings.map((booking) =>
         booking._id === bookingId ? { ...booking, status: 'Cancelled' } : booking
       );
       setBookings(updatedBookings);
@@ -76,25 +73,25 @@ export default function MyBookings() {
   };
 
   const deleteBooking = async (bookingId) => {
-  if (!window.confirm("Are you sure you want to permanently delete this booking?")) {
-    return;
-  }
+    if (!window.confirm('Are you sure you want to permanently delete this booking?')) {
+      return;
+    }
 
-  try {
-    await bookingAPI.deleteBooking(bookingId);
+    try {
+      await bookingAPI.deleteBooking(bookingId);
 
-    setBookings((prevBookings) =>
-      prevBookings.filter((booking) => booking._id !== bookingId)
-    );
+      setBookings((prevBookings) =>
+        prevBookings.filter((booking) => booking._id !== bookingId)
+      );
 
-    setSuccess("Booking deleted successfully!");
-    setTimeout(() => setSuccess(""), 3000);
-  } catch (err) {
-    console.error("Error deleting booking:", err);
-    setError("Failed to delete booking");
-    setTimeout(() => setError(""), 3000);
-  }
-};
+      setSuccess('Booking deleted successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Error deleting booking:', err);
+      setError('Failed to delete booking');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
 
   const openChatForBooking = (booking) => {
     setActiveChatBooking(booking);
@@ -103,17 +100,17 @@ export default function MyBookings() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
-        <div className="text-center space-y-6">
-          <AlertCircle className="w-12 h-12 text-slate-500 mx-auto" />
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f1ea] px-4">
+        <div className="space-y-6 text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-[#7d6a62]" />
           <div>
-            <h2 className="text-2xl font-bold text-slate-200 mb-2">Not Logged In</h2>
-            <p className="text-slate-400 mb-6">Please sign in to view your bookings.</p>
+            <h2 className="mb-2 text-2xl font-black tracking-[-0.05em] text-[#201a17]">Not logged in</h2>
+            <p className="mb-6 text-[#655d5a]">Please sign in to view your bookings.</p>
             <button
               onClick={() => navigate('/login')}
-              className="px-6 py-3 bg-linear-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold rounded-xl transition-all"
+              className="rounded-full bg-[#d77a4a] px-6 py-3 text-sm font-bold text-white"
             >
-              Sign In
+              Sign in
             </button>
           </div>
         </div>
@@ -122,56 +119,50 @@ export default function MyBookings() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 pt-8 pb-16">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        {/* Header */}
-        <div className="bg-slate-900/40 border border-slate-800/60 rounded-3xl p-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <div className="min-h-screen bg-[#f7f1ea] pb-16 pt-8">
+      <div className="mx-auto max-w-6xl space-y-8 px-4 sm:px-6 lg:px-8">
+        <header className="rounded-[30px] border border-[#eadcc7] bg-[#fffdfb]/80 p-6 shadow-[0_18px_38px_rgba(55,33,20,0.04)] sm:p-8">
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <h1 className="text-4xl font-extrabold text-slate-100 mb-2">
-                My Bookings
-              </h1>
-              <p className="text-slate-400">Manage and track all your service bookings</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8a5a3c]">Bookings</p>
+              <h1 className="mt-2 text-4xl font-black tracking-[-0.06em] text-[#201a17]">My bookings</h1>
+              <p className="mt-2 text-sm text-[#655d5a]">Manage and track every service appointment.</p>
             </div>
+
             <Link
               to="/services"
-              className="flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all whitespace-nowrap"
+              className="inline-flex items-center gap-2 rounded-full bg-[#d77a4a] px-5 py-3 text-sm font-bold text-white"
             >
-              <ArrowRight className="w-4 h-4" />
-              Book New Service
+              Book new service
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-        </div>
+        </header>
 
-        {/* Notifications */}
         {success && (
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-            <CheckCircle className="w-5 h-5 shrink-0" />
-            <p className="text-sm font-semibold">{success}</p>
+          <div className="flex items-center gap-3 rounded-[22px] border border-[#b9d4b0] bg-[#edf6ee] p-4 text-sm font-semibold text-[#2b5d3f]">
+            <CheckCircle className="h-5 w-5 shrink-0" />
+            <p>{success}</p>
           </div>
         )}
 
         {error && (
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400">
-            <AlertCircle className="w-5 h-5 shrink-0" />
-            <p className="text-sm font-semibold">{error}</p>
+          <div className="flex items-center gap-3 rounded-[22px] border border-[#e6b7ad] bg-[#f9ece9] p-4 text-sm font-semibold text-[#8a4d2b]">
+            <AlertCircle className="h-5 w-5 shrink-0" />
+            <p>{error}</p>
           </div>
         )}
 
         {notification && (
-          <div className="fixed bottom-5 right-5 z-40 w-[calc(100vw-2rem)] max-w-sm rounded-2xl border border-cyan-500/30 bg-slate-950 shadow-2xl shadow-cyan-500/10 p-4">
+          <div className="fixed bottom-5 right-5 z-40 w-[calc(100vw-2rem)] max-w-sm rounded-[24px] border border-[#d3bda6] bg-[#201a17] p-4 text-white shadow-2xl shadow-[#201a17]/20">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-400 mb-1">New message</p>
-                <h3 className="text-sm font-bold text-slate-100">{notification.title}</h3>
-                <p className="text-sm text-slate-400 mt-1 line-clamp-2">{notification.message}</p>
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#f7c28e]">New message</p>
+                <h3 className="text-sm font-bold text-white">{notification.title}</h3>
+                <p className="mt-1 text-sm text-[#d8d0cc]">{notification.message}</p>
               </div>
-              <button
-                type="button"
-                onClick={dismissNotification}
-                className="text-slate-500 hover:text-slate-200 transition-colors"
-              >
-                <AlertCircle className="w-5 h-5" />
+              <button onClick={dismissNotification} className="text-[#d8d0cc]">
+                <AlertCircle className="h-5 w-5" />
               </button>
             </div>
             <div className="mt-4 flex gap-2">
@@ -184,14 +175,14 @@ export default function MyBookings() {
                   }
                   dismissNotification();
                 }}
-                className="flex-1 rounded-xl bg-cyan-500 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-cyan-400 transition-colors"
+                className="flex-1 rounded-full bg-[#d77a4a] px-4 py-2 text-sm font-bold text-white"
               >
-                View Chat
+                View chat
               </button>
               <button
                 type="button"
                 onClick={dismissNotification}
-                className="rounded-xl border border-slate-800 px-4 py-2 text-sm font-semibold text-slate-300 hover:border-slate-700 hover:text-slate-100 transition-colors"
+                className="rounded-full border border-[#4d453f] px-4 py-2 text-sm font-semibold text-[#d8d0cc]"
               >
                 Dismiss
               </button>
@@ -199,130 +190,146 @@ export default function MyBookings() {
           </div>
         )}
 
-        {/* Bookings Content */}
-        <div>
-          {loadingBookings ? (
-            <div className="py-20 text-center">
-              <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-slate-400 mt-4">Loading your bookings...</p>
-            </div>
-          ) : bookings.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {bookings.map((booking) => (
-                <div
-                  key={booking._id}
-                  className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 space-y-4 hover:border-slate-700 transition-all"
-                >
-                  {/* Booking Header */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-bold text-slate-100">{booking.serviceName}</h3>
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                            booking.status === 'Scheduled'
-                              ? 'bg-cyan-500/15 text-cyan-400'
-                              : booking.status === 'Completed'
-                                ? 'bg-emerald-500/15 text-emerald-400'
-                                : 'bg-slate-700/50 text-slate-400'
-                          }`}>
-                            {booking.status}
-                          </span>
-                          {unreadCounts[String(booking._id)] > 0 && (
-                            <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                              {unreadCounts[String(booking._id)]}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-sm text-slate-400">{booking.category}</p>
-                      <p className="text-xs text-slate-500 mt-1">ID: {booking.bookingId}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-slate-400 mb-1">Total Cost</p>
-                      <p className="text-2xl font-bold text-cyan-400">Rs. {booking.price}</p>
-                    </div>
+        {loadingBookings ? (
+          <div className="rounded-[28px] border border-[#eadcc7] bg-[#fffdfb]/80 p-12 text-center">
+            <div className="mx-auto h-11 w-11 animate-spin rounded-full border-4 border-[#d58c63] border-t-transparent" />
+            <p className="mt-4 text-sm text-[#655d5a]">Loading your bookings...</p>
+          </div>
+        ) : bookings.length > 0 ? (
+          <div className="space-y-5">
+            {bookings.map((booking) => (
+              <article key={booking._id} className="rounded-[30px] border border-[#eadcc7] bg-[#fffdfb]/80 p-5 sm:p-6">
+                <div className="flex flex-col gap-4 border-b border-[#efe0d0] pb-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a5a3c]">Service</p>
+                    <h2 className="mt-2 text-2xl font-black tracking-[-0.05em] text-[#201a17]">{booking.serviceName}</h2>
                   </div>
 
-                  {/* Booking Details */}
-                  <div className="pt-4 border-t border-slate-800 space-y-3">
-                    <div className="flex items-center gap-3 text-sm">
-                      <Calendar className="w-4 h-4 text-cyan-400 shrink-0" />
-                      <span className="text-slate-300">{booking.date}</span>
-                      <Clock className="w-4 h-4 text-cyan-400 shrink-0" />
-                      <span className="text-slate-300">{booking.time}</span>
-                    </div>
-
-                    <div className="flex items-start gap-3 text-sm">
-                      <MapPin className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                      <span className="text-slate-300">{booking.address}</span>
-                    </div>
-
-                    <div className="flex items-center gap-3 text-sm">
-                      <User className="w-4 h-4 text-cyan-400 shrink-0" />
-                      <span className="text-slate-300 font-semibold">{booking.providerName}</span>
-                      <Phone className="w-4 h-4 text-cyan-400 shrink-0" />
-                      <span className="text-slate-300">{booking.providerPhone}</span>
-                    </div>
-
-                    {booking.instructions && (
-                      <div className="p-3 bg-slate-900/50 rounded-lg border border-slate-800">
-                        <p className="text-xs text-slate-400 font-semibold mb-1">Special Instructions</p>
-                        <p className="text-sm text-slate-300">{booking.instructions}</p>
-                      </div>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${
+                        booking.status === 'Scheduled'
+                          ? 'bg-[#edf4ee] text-[#3d6a4b]'
+                          : booking.status === 'Completed'
+                          ? 'bg-[#f4efe4] text-[#8e6d2c]'
+                          : 'bg-[#f1ece8] text-[#7c6b63]'
+                      }`}
+                    >
+                      {booking.status}
+                    </span>
+                    {unreadCounts[String(booking._id)] > 0 && (
+                      <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-[#c75b4d] px-2 py-0.5 text-[10px] font-bold text-white">
+                        {unreadCounts[String(booking._id)]}
+                      </span>
                     )}
                   </div>
+                </div>
 
-                  {/* Actions */}
-                  <div className="pt-4 border-t border-slate-800 flex gap-2 flex-col sm:flex-row">
-                    <button
-                      onClick={() => openChatForBooking(booking)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:border-cyan-500/50 font-semibold transition-all"
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                      Open Chat
-                      {unreadCounts[String(booking._id)] > 0 && (
-                        <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                          {unreadCounts[String(booking._id)]}
-                        </span>
-                      )}
-                    </button>
+                <div className="mt-5 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+                  <div className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Date</p>
+                        <div className="mt-1 flex items-center gap-2 text-sm text-[#4c4441]">
+                          <Calendar className="h-4 w-4 text-[#b86845]" />
+                          <span>{booking.date}</span>
+                        </div>
+                      </div>
 
-                    {booking.status === "Scheduled" ? (
-  <button
-    onClick={() => cancelBooking(booking._id)}
-    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:border-rose-500/50 font-semibold transition-all"
-  >
-    <Trash2 className="w-4 h-4" />
-    Cancel Booking
-  </button>
-) : (
-  <button
-    onClick={() => deleteBooking(booking._id)}
-    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-600/30 hover:border-red-600/50 font-semibold transition-all"
-  >
-    <Trash2 className="w-4 h-4" />
-    Delete Booking
-  </button>
-)}
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Time</p>
+                        <div className="mt-1 flex items-center gap-2 text-sm text-[#4c4441]">
+                          <Clock className="h-4 w-4 text-[#b86845]" />
+                          <span>{booking.time}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Location</p>
+                      <div className="mt-1 flex items-start gap-2 text-sm text-[#4c4441]">
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#b86845]" />
+                        <span>{booking.address}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Professional</p>
+                      <div className="mt-1 flex items-center gap-2 text-sm text-[#4c4441]">
+                        <User className="h-4 w-4 text-[#b86845]" />
+                        <span>{booking.providerName}</span>
+                      </div>
+                      <div className="mt-1 flex items-center gap-2 text-sm text-[#4c4441]">
+                        <Phone className="h-4 w-4 text-[#b86845]" />
+                        <span>{booking.providerPhone}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Total</p>
+                      <p className="mt-1 text-3xl font-black tracking-[-0.05em] text-[#b86845]">Rs. {booking.price}</p>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-20 text-center border border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
-              <Home className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-slate-300 mb-2">No Bookings Yet</h3>
-              <p className="text-slate-400 mb-6">You haven't scheduled any services yet. Start by browsing available services.</p>
-              <button
-                onClick={() => navigate('/services')}
-                className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-lg transition-all"
-              >
-                Browse Services
-              </button>
-            </div>
-          )}
-        </div>
+
+                {booking.instructions && (
+                  <div className="mt-5 rounded-[18px] border border-[#efe0d0] bg-[#faf5f0] p-3 text-sm text-[#4c4441]">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Instructions</p>
+                    <p className="mt-2">{booking.instructions}</p>
+                  </div>
+                )}
+
+                <div className="mt-5 flex flex-col gap-3 border-t border-[#efe0d0] pt-4 sm:flex-row">
+                  <button
+                    onClick={() => openChatForBooking(booking)}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[#d7b091] bg-[#f9efe7] px-4 py-2.5 text-sm font-bold text-[#8a4d2b]"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Open chat
+                    {unreadCounts[String(booking._id)] > 0 && (
+                      <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#c75b4d] px-1.5 py-0.5 text-[10px] font-bold text-white">
+                        {unreadCounts[String(booking._id)]}
+                      </span>
+                    )}
+                  </button>
+
+                  {booking.status === 'Scheduled' ? (
+                    <button
+                      onClick={() => cancelBooking(booking._id)}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[#e2c4b6] bg-[#fff5f1] px-4 py-2.5 text-sm font-bold text-[#8a4d2b]"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Cancel booking
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => deleteBooking(booking._id)}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[#e2c4b6] bg-[#fff5f1] px-4 py-2.5 text-sm font-bold text-[#8a4d2b]"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete booking
+                    </button>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-[28px] border border-dashed border-[#e2c8b2] bg-[#fffdfb]/80 p-12 text-center">
+            <Home className="mx-auto mb-4 h-12 w-12 text-[#7d6a62]" />
+            <h3 className="text-xl font-black tracking-[-0.04em] text-[#201a17]">No bookings yet</h3>
+            <p className="mt-2 text-sm text-[#655d5a]">You haven’t scheduled any services yet.</p>
+            <button
+              onClick={() => navigate('/services')}
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#d77a4a] px-5 py-2.5 text-sm font-bold text-white"
+            >
+              Browse services
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       <ChatBox

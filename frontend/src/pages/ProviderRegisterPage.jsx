@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Phone, Users, Briefcase, Award, FileText, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight, Upload } from 'lucide-react';
+import { Mail, Lock, Phone, Users, Briefcase, Award, FileText, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight, Upload, Hash } from 'lucide-react';
 import { authAPI, categoryAPI } from '../API';
 import ImageWithFallback from '../components/ImageWithFallback';
 
@@ -24,6 +24,7 @@ export default function ProviderRegisterPage() {
     password: '',
     confirmPassword: '',
     phone: '',
+    citizenshipNumber: '',
     skill: '',
     experience: '',
     citizenshipImage: null,
@@ -81,40 +82,48 @@ export default function ProviderRegisterPage() {
     setSuccess('');
 
     // Validation
-    if (!formData.firstName.trim()) {
-      setError('First name is required');
+    if (formData.firstName.trim().length < 2 || formData.lastName.trim().length < 2) {
+      setError('Please enter a first and last name of at least 2 characters each.');
       return;
     }
-    if (!formData.lastName.trim()) {
-      setError('Last name is required');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      setError('Please enter a valid email address.');
       return;
     }
-    if (!formData.email.trim()) {
-      setError('Email is required');
-      return;
-    }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (formData.password.length < 8 || !/[A-Za-z]/.test(formData.password) || !/\d/.test(formData.password)) {
+      setError('Password must be at least 8 characters and include a letter and a number.');
       return;
     }
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-    if (!formData.phone.trim()) {
-      setError('Phone number is required');
+    if (!/^(?:\+977[-\s]?)?9\d{9}$/.test(formData.phone.trim())) {
+      setError('Please enter a valid Nepali mobile number (for example, 9800000000).');
+      return;
+    }
+    if (formData.citizenshipNumber.replace(/[^a-zA-Z0-9]/g, '').length < 4) {
+      setError('Please enter a valid citizenship number.');
       return;
     }
     if (!formData.skill) {
       setError('Please select a service category');
       return;
     }
-    if (!formData.experience || formData.experience < 0) {
-      setError('Please enter valid experience (in years)');
+    if (formData.experience === '' || !Number.isInteger(Number(formData.experience)) || Number(formData.experience) < 0 || Number(formData.experience) > 99) {
+      setError('Experience must be a whole number between 0 and 99 years.');
       return;
     }
     if (!formData.citizenshipImage) {
       setError('Citizenship image is required for verification');
+      return;
+    }
+    if (!formData.citizenshipImage.type.startsWith('image/') || formData.citizenshipImage.size > 5 * 1024 * 1024) {
+      setError('Citizenship image must be an image file no larger than 5 MB.');
+      return;
+    }
+    if (formData.avatar && (!formData.avatar.type.startsWith('image/') || formData.avatar.size > 5 * 1024 * 1024)) {
+      setError('Avatar image must be an image file no larger than 5 MB.');
       return;
     }
 
@@ -127,6 +136,7 @@ export default function ProviderRegisterPage() {
         email: formData.email,
         password: formData.password,
         phone: formData.phone,
+        citizenshipNumber: formData.citizenshipNumber,
         skill: formData.skill,
         experience: parseInt(formData.experience),
         availability: formData.availability,
@@ -161,31 +171,28 @@ export default function ProviderRegisterPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4 py-16 bg-radial from-slate-900 to-slate-950">
+    <div className="flex min-h-[calc(100vh-80px)] items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(126,141,104,0.14),_transparent_25%),linear-gradient(180deg,#f7f1ea_0%,#f5efe8_100%)] px-4 py-16">
       <div className="w-full max-w-2xl">
-        {/* Card wrapper */}
-        <div className="backdrop-blur-xl bg-slate-900/40 border border-slate-800/80 rounded-3xl p-8 sm:p-10 shadow-2xl shadow-emerald-500/5">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 mb-4 shadow-lg shadow-emerald-500/5">
-              <Briefcase className="w-8 h-8 stroke-2" />
+        <div className="rounded-[30px] border border-[#eadcc7] bg-[#fffdfb]/90 p-8 shadow-[0_16px_40px_rgba(61,38,26,0.08)] sm:p-10">
+          <div className="mb-8 text-center">
+            <div className="mb-4 inline-flex rounded-[18px] border border-[#d9e5d1] bg-[#f1f6ee] p-3 text-[#4f6d4c]">
+              <Briefcase className="h-8 w-8 stroke-2" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-100 tracking-tight">Become a Service Provider</h2>
-            <p className="text-sm text-slate-400 mt-2">Join GharDoctor and start earning by providing services</p>
+            <h2 className="text-2xl font-black tracking-[-0.06em] text-[#201a17] sm:text-3xl">Become a service provider</h2>
+            <p className="mt-2 text-sm text-[#655d5a]">Join GharDoctor and start earning by providing services</p>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form noValidate onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="flex items-center gap-2.5 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">
-                <AlertCircle className="w-5 h-5 shrink-0" />
+              <div className="flex items-center gap-2.5 rounded-[18px] border border-[#e9c1b7] bg-[#f9ece9] p-4 text-sm text-[#8a4d2b]">
+                <AlertCircle className="h-5 w-5 shrink-0" />
                 <p>{error}</p>
               </div>
             )}
 
             {success && (
-              <div className="flex items-center gap-2.5 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
-                <CheckCircle className="w-5 h-5 shrink-0" />
+              <div className="flex items-center gap-2.5 rounded-[18px] border border-[#bfd6b4] bg-[#edf6ee] p-4 text-sm text-[#2b5d3f]">
+                <CheckCircle className="h-5 w-5 shrink-0" />
                 <p>{success}</p>
               </div>
             )}
@@ -339,7 +346,7 @@ export default function ProviderRegisterPage() {
               </div>
             </div>
 
-            {/* Phone and Service Category */}
+            {/* Phone, citizenship number, and service category */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label htmlFor="phone" className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">
@@ -356,6 +363,28 @@ export default function ProviderRegisterPage() {
                     value={formData.phone}
                     onChange={handleInputChange}
                     placeholder="+977 9800000000"
+                    required
+                    disabled={loading}
+                    className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500/50 text-slate-100 placeholder-slate-600 transition-all duration-200"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="citizenshipNumber" className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">
+                  Citizenship Number
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
+                    <Hash className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="text"
+                    id="citizenshipNumber"
+                    name="citizenshipNumber"
+                    value={formData.citizenshipNumber}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 12-34-56-78901"
                     required
                     disabled={loading}
                     className="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500/50 text-slate-100 placeholder-slate-600 transition-all duration-200"
@@ -419,10 +448,7 @@ export default function ProviderRegisterPage() {
               <label htmlFor="citizenshipImage" className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">
                 Citizenship/ID Image
               </label>
-              <p className="text-xs text-slate-500 pl-1 -mt-0.5">
-                Upload a clear photo of your Nepali Citizenship Certificate.
-                OCR will verify the document type <span className="text-amber-400/80 font-medium">and confirm your registered name matches</span> the card.
-              </p>
+              
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
                   <FileText className="w-5 h-5" />
@@ -443,8 +469,7 @@ export default function ProviderRegisterPage() {
                   <img src={citizenshipImagePreview} alt="Preview" className="w-full h-32 object-cover rounded-xl" />
                   <div className="mt-2 flex items-center gap-1.5 px-1">
                     <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                    <span className="text-xs text-amber-400 font-medium">Pending OCR Verification — will be checked on submit</span>
-                  </div>
+                    </div>
                 </div>
               )}
             </div>
@@ -452,7 +477,7 @@ export default function ProviderRegisterPage() {
             {/* Avatar Upload */}
             <div className="space-y-1.5">
               <label htmlFor="avatar" className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">
-                Avatar Image
+                Profile Image
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">

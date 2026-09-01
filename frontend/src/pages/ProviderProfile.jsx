@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, MapPin, Phone, Mail, Briefcase, Award, Clock, CheckCircle, ArrowLeft } from 'lucide-react';
+import {
+  Star, MapPin, Phone, Mail, Briefcase, Award, Clock,
+  CheckCircle, ArrowLeft, ShieldCheck
+} from 'lucide-react';
 import { providerAPI, serviceAPI } from '../API';
 import Rating from '../components/Rating';
 import StarRatingInput from '../components/StarRatingInput';
@@ -53,8 +56,7 @@ export default function ProviderProfile() {
       } catch (err) {
         console.error('Error fetching matching service:', err);
         setMatchingService(null);
-      }
-      finally {
+      } finally {
         setServiceLookupLoading(false);
       }
     };
@@ -64,10 +66,10 @@ export default function ProviderProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 pt-8 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f1ea] pt-8">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-slate-400 mt-4">Loading provider details...</p>
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-[#d58c63] border-t-transparent" />
+          <p className="mt-4 text-sm text-[#655d5a]">Loading provider details...</p>
         </div>
       </div>
     );
@@ -75,17 +77,17 @@ export default function ProviderProfile() {
 
   if (error || !provider) {
     return (
-      <div className="min-h-screen bg-slate-950 pt-8">
-        <div className="max-w-4xl mx-auto px-4">
+      <div className="min-h-screen bg-[#f7f1ea] pt-8">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 mb-6 transition-colors"
+            className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[#8a4d2b]"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Go Back
+            <ArrowLeft className="h-4 w-4" />
+            Go back
           </button>
-          <div className="text-center py-20">
-            <p className="text-red-400 text-lg font-semibold">{error || 'Provider not found'}</p>
+          <div className="rounded-[28px] border border-[#eadcc7] bg-[#fffdfb]/80 p-12 text-center">
+            <p className="text-lg font-bold text-[#a24939]">{error || 'Provider not found'}</p>
           </div>
         </div>
       </div>
@@ -121,182 +123,192 @@ export default function ProviderProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 pt-8 pb-16">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back Button */}
+    <div className="min-h-screen bg-[#f7f1ea] pb-16 pt-8">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 mb-8 transition-colors"
+          className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-[#8a4d2b]"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Go Back
+          <ArrowLeft className="h-4 w-4" />
+          Go back
         </button>
 
-        {/* Profile Header Card */}
-        <div className="bg-slate-900/40 border border-slate-800/60 rounded-3xl p-8 md:p-12 mb-8">
-          <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
-            {/* Avatar */}
-            <div className="shrink-0">
-              <img
-                src={provider.avatar || 'https://via.placeholder.com/150'}
-                alt={provider.firstName}
-                className="w-40 h-40 rounded-2xl object-cover border border-slate-700 shadow-lg"
-              />
-            </div>
+        <div className="grid gap-8 lg:grid-cols-[1.5fr_0.8fr]">
+          <section className="space-y-6">
+            <div className="rounded-[30px] border border-[#eadcc7] bg-[#fffdfb]/80 p-5 sm:p-8">
+              <div className="flex flex-col gap-6 md:flex-row md:items-center">
+                <img
+                  src={provider.avatar || 'https://via.placeholder.com/150'}
+                  alt={provider.firstName}
+                  className="h-32 w-32 rounded-[24px] border border-[#eadcc7] object-cover md:h-36 md:w-36"
+                />
 
-            {/* Info */}
-            <div className="flex-1 space-y-4">
-              <div>
-                <h1 className="text-4xl font-extrabold text-slate-100 tracking-tight">
-                  {provider.firstName} {provider.lastName}
-                </h1>
-                <div className="flex items-center gap-2 mt-2">
-                  <Briefcase className="w-4 h-4 text-cyan-400" />
-                  <span className="text-lg text-cyan-400 font-semibold">{provider.skill}</span>
+                <div className="flex-1 space-y-4">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8a5a3c]">Professional</p>
+                    <h1 className="mt-2 text-4xl font-black tracking-[-0.06em] text-[#201a17]">
+                      {provider.firstName} {provider.lastName}
+                    </h1>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2 rounded-full border border-[#eadcc7] bg-[#f8f1ea] px-3 py-1.5 text-sm font-semibold text-[#8a4d2b]">
+                      <Briefcase className="h-4 w-4" />
+                      {provider.skill}
+                    </div>
+                    <div className="flex items-center gap-2 rounded-full border border-[#eadcc7] bg-[#f8f1ea] px-3 py-1.5 text-sm font-semibold text-[#8a4d2b]">
+                      <Star className="h-4 w-4 fill-[#d9b46f] text-[#d9b46f]" />
+                      {(provider.rating || 0).toFixed(1)} rating
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-[18px] border border-[#eadcc7] bg-[#f9f3ed] p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Experience</p>
+                      <p className="mt-2 text-xl font-black text-[#201a17]">{provider.experience || 0}+ yrs</p>
+                    </div>
+                    <div className="rounded-[18px] border border-[#eadcc7] bg-[#f9f3ed] p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Completed</p>
+                      <p className="mt-2 text-xl font-black text-[#201a17]">{provider.completedJobs || 0}</p>
+                    </div>
+                    <div className="rounded-[18px] border border-[#eadcc7] bg-[#f9f3ed] p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Availability</p>
+                      <p className={`mt-2 text-sm font-bold ${provider.availability ? 'text-[#2f6d49]' : 'text-[#7c6b63]'}`}>
+                        {provider.availability ? 'Available now' : 'Unavailable'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              {/* Rating */}
-              <div className="flex items-center gap-4 flex-wrap">
-                <div className="flex items-center gap-2 bg-slate-900/60 px-4 py-2.5 rounded-xl border border-slate-800">
-                  <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
-                  <span className="font-bold text-slate-100">{provider.rating?.toFixed(1) || '4.5'}</span>
-                  <span className="text-slate-400">({provider.reviews || 0} reviews)</span>
-                </div>
+            <div className="rounded-[30px] border border-[#eadcc7] bg-[#fffdfb]/80 p-5 sm:p-6">
+              <div className="border-b border-[#efe0d0] pb-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a5a3c]">Overview</p>
+                <h2 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[#201a17]">About this specialist</h2>
+              </div>
 
-                <div className="flex items-center gap-2 bg-emerald-500/10 px-4 py-2.5 rounded-xl border border-emerald-500/30">
-                  <CheckCircle className="w-5 h-5 text-emerald-400" />
-                  <span className="font-semibold text-emerald-400">{provider.completedJobs || 0} Completed Jobs</span>
-                </div>
-
-                <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border ${
-                  provider.availability
-                    ? 'bg-emerald-500/10 border-emerald-500/30'
-                    : 'bg-slate-800/50 border-slate-700/50'
-                }`}>
-                  <Clock className="w-5 h-5" style={{ color: provider.availability ? '#10b981' : '#64748b' }} />
-                  <span className={`font-semibold ${provider.availability ? 'text-emerald-400' : 'text-slate-400'}`}>
-                    {provider.availability ? 'Available Now' : 'Unavailable'}
+              <div className="mt-5 space-y-4 text-sm leading-relaxed text-[#4d4541]">
+                <p>
+                  Experienced {provider.skill} professional with {provider.experience || 0} years in the trade. Dedicated to reliable home service, careful workmanship, and clear communication from booking to completion.
+                </p>
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <span className="rounded-full border border-[#eadcc7] bg-[#f9f3ed] px-3 py-1.5 text-xs font-semibold text-[#7d6a62]">
+                    Background checked
+                  </span>
+                  <span className="rounded-full border border-[#eadcc7] bg-[#f9f3ed] px-3 py-1.5 text-xs font-semibold text-[#7d6a62]">
+                    Verified professional
+                  </span>
+                  <span className="rounded-full border border-[#eadcc7] bg-[#f9f3ed] px-3 py-1.5 text-xs font-semibold text-[#7d6a62]">
+                    Local service expert
                   </span>
                 </div>
               </div>
+            </div>
 
-              {/* Experience */}
-              <div className="flex items-center gap-2 text-slate-300">
-                <Award className="w-5 h-5 text-yellow-500" />
-                <span className="text-lg font-semibold">{provider.experience || 0}+ Years of Experience</span>
+            <div className="rounded-[30px] border border-[#eadcc7] bg-[#fffdfb]/80 p-5 sm:p-6">
+              <div className="border-b border-[#efe0d0] pb-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a5a3c]">Reviews</p>
+                <h2 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[#201a17]">Customer feedback</h2>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/50 px-4 py-3">
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 rounded-full border border-[#eadcc7] bg-[#f8f1ea] px-3 py-2 text-sm font-semibold text-[#8a4d2b]">
+                  <Star className="h-4 w-4 fill-[#d9b46f] text-[#d9b46f]" />
+                  {provider.rating?.toFixed(1) || '4.5'} average
+                </div>
+                <div className="text-sm text-[#655d5a]">{provider.reviews || 0} verified reviews</div>
+              </div>
+
+              <div className="mt-5 rounded-[20px] border border-[#efe0d0] bg-[#faf5f0] p-4">
                 <Rating
                   value={provider.rating || 0}
                   text={`${(provider.rating || 0).toFixed(1)} average from ${provider.reviews || 0} reviews`}
                 />
               </div>
             </div>
-          </div>
-        </div>
+          </section>
 
-        {/* Main Content Grid */}
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* Left Column: Details */}
-          <div className="md:col-span-2 space-y-6">
-            {/* About Section */}
-            <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 space-y-4">
-              <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-cyan-400" />
-                About
-              </h2>
-              <p className="text-slate-300 leading-relaxed">
-                Experienced {provider.skill} professional with {provider.experience || 0} years in the industry. Dedicated to providing high-quality service and customer satisfaction.
-              </p>
+          <aside className="space-y-6">
+            <div className="rounded-[30px] border border-[#eadcc7] bg-[#fffdfb]/80 p-5 sm:p-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a5a3c]">Booking</p>
+              <h2 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[#201a17]">Book this specialist</h2>
+
+              <div className="mt-5 space-y-4">
+                <div className="rounded-[18px] border border-[#efe0d0] bg-[#faf5f0] p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Specialization</p>
+                  <p className="mt-2 text-base font-bold text-[#201a17]">{provider.skill}</p>
+                </div>
+
+                <div className="rounded-[18px] border border-[#efe0d0] bg-[#faf5f0] p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Availability</p>
+                  <p className={`mt-2 text-base font-bold ${provider.availability ? 'text-[#2f6d49]' : 'text-[#7c6b63]'}`}>
+                    {provider.availability ? 'Available for new bookings' : 'Currently unavailable'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={handleBooking}
+                disabled={!provider.availability || serviceLookupLoading}
+                className={`mt-6 w-full rounded-full px-4 py-3 text-sm font-bold text-white ${
+                  provider.availability && !serviceLookupLoading
+                    ? 'bg-gradient-to-r from-[#d77a4a] to-[#d9b46f]'
+                    : 'cursor-not-allowed bg-[#efe6de] text-[#8d7c75]'
+                }`}
+              >
+                {serviceLookupLoading ? 'Preparing booking...' : provider.availability ? 'Book now' : 'Unavailable'}
+              </button>
             </div>
 
-            {/* Skills & Expertise */}
-            <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 space-y-4">
-              <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                <Award className="w-5 h-5 text-cyan-400" />
-                Expertise
-              </h2>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-300 font-semibold">{provider.skill}</span>
-                  <div className="flex gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`w-2 h-2 rounded-full ${
-                          i < 4 ? 'bg-cyan-400' : 'bg-slate-700'
-                        }`}
-                      />
-                    ))}
-                  </div>
+            <div className="rounded-[30px] border border-[#eadcc7] bg-[#fffdfb]/80 p-5 sm:p-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a5a3c]">Contact</p>
+              <h2 className="mt-2 text-xl font-black tracking-[-0.04em] text-[#201a17]">Reach out</h2>
+
+              <div className="mt-5 space-y-3 text-sm text-[#4d4541]">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-[#b86845]" />
+                  <span>{provider.email}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-[#b86845]" />
+                  <span>{provider.phone}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-[#b86845]" />
+                  <span>{provider.address || 'Location available on request'}</span>
                 </div>
               </div>
             </div>
 
-            {/* Statistics */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 text-center space-y-2">
-                <div className="text-3xl font-bold text-cyan-400">{provider.experience || 0}</div>
-                <div className="text-sm text-slate-400">Years Experience</div>
+            <div className="rounded-[30px] border border-[#eadcc7] bg-[#fffdfb]/80 p-5 sm:p-6">
+              <div className="flex items-center gap-2 text-[#201a17]">
+                <ShieldCheck className="h-4 w-4 text-[#3d6a4b]" />
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a5a3c]">Verified</p>
               </div>
-              <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 text-center space-y-2">
-                <div className="text-3xl font-bold text-emerald-400">{provider.completedJobs || 0}</div>
-                <div className="text-sm text-slate-400">Jobs Completed</div>
-              </div>
-              <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 text-center space-y-2">
-                <div className="text-3xl font-bold text-amber-400">{provider.rating?.toFixed(1) || '4.5'}</div>
-                <div className="text-sm text-slate-400">Average Rating</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Contact & CTA */}
-          <div className="space-y-6">
-            {/* Contact Card */}
-            <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 space-y-4">
-              <h3 className="text-lg font-bold text-slate-100">Contact</h3>
-              
-              <div className="space-y-3">
-                <a
-                  href={`mailto:${provider.email}`}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition-colors group"
-                >
-                  <Mail className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300" />
-                  <span className="text-sm text-slate-300 group-hover:text-slate-100 truncate">{provider.email}</span>
-                </a>
-
-                <a
-                  href={`tel:${provider.phone}`}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition-colors group"
-                >
-                  <Phone className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300" />
-                  <span className="text-sm text-slate-300 group-hover:text-slate-100">{provider.phone}</span>
-                </a>
-              </div>
+              <p className="mt-3 text-sm text-[#4d4541]">Identity verified and trusted for home service bookings.</p>
             </div>
 
-            <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 space-y-4">
+            <div className="rounded-[30px] border border-[#eadcc7] bg-[#fffdfb]/80 p-5 sm:p-6">
               <div className="space-y-1">
-                <h3 className="text-lg font-bold text-slate-100">Rate this provider</h3>
-                <p className="text-xs text-slate-400">Share your experience after a booking. Your rating updates the provider average instantly.</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a5a3c]">Rate this specialist</p>
+                <h3 className="text-xl font-black tracking-[-0.04em] text-[#201a17]">Your review</h3>
               </div>
 
-              <form onSubmit={handleRatingSubmit} className="space-y-4">
+              <form onSubmit={handleRatingSubmit} className="mt-5 space-y-4">
                 <div className="space-y-2">
                   <StarRatingInput rating={ratingValue} setRating={setRatingValue} />
-                  <p className="text-xs text-slate-500">Selected rating: {ratingValue}/5</p>
+                  <p className="text-xs text-[#655d5a]">Selected rating: {ratingValue}/5</p>
                 </div>
 
                 {ratingError && (
-                  <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-400">
+                  <div className="rounded-[16px] border border-[#e6b7ad] bg-[#f9ece9] p-3 text-sm text-[#8a4d2b]">
                     {ratingError}
                   </div>
                 )}
 
                 {ratingMessage && (
-                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+                  <div className="rounded-[16px] border border-[#b9d4b0] bg-[#edf6ee] p-3 text-sm text-[#2b5d3f]">
                     {ratingMessage}
                   </div>
                 )}
@@ -304,39 +316,13 @@ export default function ProviderProfile() {
                 <button
                   type="submit"
                   disabled={submittingRating}
-                  className="w-full rounded-xl bg-linear-to-r from-cyan-500 to-blue-600 px-4 py-3 font-bold text-slate-950 transition-all hover:from-cyan-400 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-full bg-[#201a17] px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {submittingRating ? 'Submitting...' : 'Submit Rating'}
+                  {submittingRating ? 'Submitting...' : 'Submit rating'}
                 </button>
               </form>
             </div>
-
-            {/* Booking CTA */}
-            <button
-              onClick={handleBooking}
-              disabled={!provider.availability || serviceLookupLoading}
-              className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all ${
-                provider.availability && !serviceLookupLoading
-                  ? 'bg-linear-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 active:scale-95'
-                  : 'bg-slate-800 text-slate-400 cursor-not-allowed opacity-50'
-              }`}
-            >
-              {serviceLookupLoading
-                ? 'Resolving Booking Option...'
-                : provider.availability
-                ? 'Book This Provider'
-                : 'Currently Unavailable'}
-            </button>
-
-            {/* Verification Badge */}
-            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-center space-y-2">
-              <div className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Verified Professional</div>
-              <div className="flex items-center justify-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-400" />
-                <span className="text-sm text-emerald-400">Identity Verified</span>
-              </div>
-            </div>
-          </div>
+          </aside>
         </div>
       </div>
     </div>

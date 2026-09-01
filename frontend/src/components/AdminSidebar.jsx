@@ -33,29 +33,29 @@ export default function AdminSidebar() {
 
   return (
     <>
-      {/* Sidebar */}
       <div
         className={`${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } ${
           isMobile ? 'fixed w-64' : 'relative w-64'
-        } bg-slate-900 border-r border-slate-800 transition-all duration-300 top-0 left-0 h-screen z-40`}
+        } bg-[#fffaf5] border-r border-[#eadcc7] transition-all duration-300 top-0 left-0 h-screen z-40 shadow-[0_10px_30px_rgba(70,42,28,0.04)]`}
       >
-        {/* Logo */}
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-[#eadcc7] p-4">
           {sidebarOpen && (
-            <h1 className="text-lg md:text-xl font-bold text-cyan-400">GharDoctor</h1>
+            <div>
+              <h1 className="text-lg font-black tracking-[-0.05em] text-[#201a17] md:text-xl">Ghar<span className="text-[#c96d42]">Doctor</span></h1>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Admin</p>
+            </div>
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-slate-400 hover:text-slate-200 transition-colors md:hidden"
+            className="text-[#6e5d57] transition-colors hover:text-[#201a17] md:hidden"
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
 
-        {/* Menu Items */}
-        <nav className="p-3 md:p-2 lg:p-4 space-y-2">
+        <nav className="space-y-2 p-3 md:p-2 lg:p-4">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
@@ -66,35 +66,33 @@ export default function AdminSidebar() {
                   navigate(item.path);
                   if (isMobile) setSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                className={`flex w-full items-center gap-3 rounded-full px-3 py-2.5 transition-all ${
                   active
-                    ? 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-400'
-                    : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
+                    ? 'border border-[#e7ba9a] bg-[#f9efe6] text-[#8e4d2f] shadow-[0_10px_22px_rgba(201,109,66,0.08)]'
+                    : 'text-[#5b4d49] hover:bg-[#f4e7dc] hover:text-[#201a17]'
                 }`}
               >
-                <Icon className="w-5 h-5 shrink-0" />
-                {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
+                <Icon className="h-5 w-5 shrink-0" />
+                {sidebarOpen && <span className="text-sm font-semibold">{item.label}</span>}
               </button>
             );
           })}
         </nav>
 
-        {/* Logout */}
         <div className="absolute bottom-4 left-4 right-4">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 transition-colors"
+            className="flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-[#5b4d49] transition-colors hover:bg-[#f9ece9] hover:text-[#8a4d2b]"
           >
-            <LogOut className="w-5 h-5 shrink-0" />
-            {sidebarOpen && <span className="text-sm">Logout</span>}
+            <LogOut className="h-5 w-5 shrink-0" />
+            {sidebarOpen && <span className="text-sm font-semibold">Logout</span>}
           </button>
         </div>
       </div>
 
-      {/* Backdrop for mobile */}
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          className="fixed inset-0 z-30 bg-black/30 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}

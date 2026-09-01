@@ -23,7 +23,10 @@ import fs from 'fs';
  *   reason:        string,
  * }>}
  */
-export const verifyCitizenshipImage = async (imagePath, { firstName = '', lastName = '' } = {}) => {
+export const verifyCitizenshipImage = async (
+  imagePath,
+  { firstName = '', lastName = '', citizenshipNumber = '' } = {}
+) => {
   if (!imagePath || !fs.existsSync(imagePath)) {
     console.warn('[OCR] Image path does not exist:', imagePath);
     return {
@@ -31,6 +34,8 @@ export const verifyCitizenshipImage = async (imagePath, { firstName = '', lastNa
       keywordMatch: false,
       nameMatch: false,
       nameMatchDetail: 'Image file not found.',
+      citizenshipNumberMatch: false,
+      citizenshipNumberMatchDetail: 'Image file not found.',
       reason: 'Image file not found for OCR verification.',
     };
   }
@@ -53,6 +58,8 @@ export const verifyCitizenshipImage = async (imagePath, { firstName = '', lastNa
       keywordMatch: false,
       nameMatch: false,
       nameMatchDetail: 'OCR engine error.',
+      citizenshipNumberMatch: false,
+      citizenshipNumberMatchDetail: 'OCR engine error.',
       reason: 'OCR processing failed due to an internal error.',
     };
   }
@@ -112,11 +119,23 @@ export const verifyCitizenshipImage = async (imagePath, { firstName = '', lastNa
   }
 
   // ─── Combined result ────────────────────────────────────────────────────────
-  const verified = keywordMatch && nameMatch;
+  // Separators vary between cards and OCR output, so compare only
+  // alphanumeric characters (for example, "12-34-56" and "123456" match).
+  const normalizedCitizenshipNumber = citizenshipNumber.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const normalizedDocumentText = extractedText.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const citizenshipNumberMatch = normalizedCitizenshipNumber.length >= 4
+    && normalizedDocumentText.includes(normalizedCitizenshipNumber);
+  const citizenshipNumberMatchDetail = citizenshipNumberMatch
+    ? 'Citizenship number was found in the document.'
+    : 'Citizenship number could not be confirmed in the document.';
+
+  const verified = keywordMatch && nameMatch && citizenshipNumberMatch;
 
   let reason;
   if (verified) {
     reason = `Document verified — keywords matched (${matchedKeywords.slice(0, 3).join(', ')}) and name matched.`;
+  } else if (!citizenshipNumberMatch) {
+    reason = `The document's citizenship number could not be confirmed. ${citizenshipNumberMatchDetail}`;
   } else if (!keywordMatch && !nameMatch) {
     reason = 'Document does not appear to be a citizenship card, and the registered name was not found.';
   } else if (!keywordMatch) {
@@ -126,7 +145,15 @@ export const verifyCitizenshipImage = async (imagePath, { firstName = '', lastNa
     reason = `The document looks like a citizenship card, but the name could not be confirmed. ${nameMatchDetail}`;
   }
 
-  return { verified, keywordMatch, nameMatch, nameMatchDetail, reason };
+  return {
+    verified,
+    keywordMatch,
+    nameMatch,
+    nameMatchDetail,
+    citizenshipNumberMatch,
+    citizenshipNumberMatchDetail,
+    reason,
+  };
 };
 
 /**

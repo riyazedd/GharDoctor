@@ -53,15 +53,15 @@ const Chatbot = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-6 right-6 z-50 ">
       {/* Chat Window */}
       {isOpen && (
-        <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-80 sm:w-96 mb-4 flex flex-col overflow-hidden transition-all duration-300 transform origin-bottom-right">
+        <div className="bg-white border border-slate-700 rounded-2xl shadow-2xl w-80 sm:w-96 mb-4 flex flex-col overflow-hidden transition-all duration-300 transform origin-bottom-right">
           {/* Header */}
           <div className="bg-blue-600 p-4 flex justify-between items-center text-white cursor-pointer" onClick={() => setIsOpen(false)}>
             <div className="flex items-center gap-2">
               <Bot size={24} />
-              <h3 className="font-semibold text-lg">GharDoctor AI</h3>
+              <h3 className="font-semibold text-lg text-white">GharDoctor AI</h3>
             </div>
             <button 
               type="button"
@@ -79,14 +79,14 @@ const Chatbot = () => {
                 key={index} 
                 className={`flex gap-2 max-w-[85%] ${msg.role === 'user' ? 'self-end flex-row-reverse' : 'self-start'}`}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user' ? 'bg-blue-500' : 'bg-slate-700'}`}>
-                  {msg.role === 'user' ? <User size={16} className="text-white" /> : <Bot size={16} className="text-white" />}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0  ${msg.role === 'user' ? 'bg-blue-500' : 'bg-slate-700 border'}`}>
+                  {msg.role === 'user' ? <User size={16} className="text-white" /> : <Bot size={16} className="" />}
                 </div>
                 <div 
                   className={`p-3 rounded-2xl text-sm ${
                     msg.role === 'user' 
                       ? 'bg-blue-600 text-white rounded-tr-sm' 
-                      : 'bg-slate-800 text-gray-200 border border-slate-700 rounded-tl-sm'
+                      : 'bg-white text-black border border-slate-700 rounded-tl-sm'
                   }`}
                 >
                   {msg.content}
@@ -114,7 +114,7 @@ const Chatbot = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type your message..."
-              className="flex-1 bg-slate-800 text-white border border-slate-700 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+              className="flex-1  border border-slate-700 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
               disabled={isLoading}
             />
             <button

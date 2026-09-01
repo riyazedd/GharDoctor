@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, LogOut, ShieldCheck, Calendar, Home, Wrench, ChevronDown, LayoutDashboard, BookOpen } from 'lucide-react';
 import { authAPI, bookingAPI } from '../API';
 import ImageWithFallback from './ImageWithFallback';
 
-export default function Navbar({ currentView }) {
+export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -15,17 +16,15 @@ export default function Navbar({ currentView }) {
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    // Check if user is logged in
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
+
     if (token && userData) {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
       setIsAuthenticated(true);
       setIsAdmin(parsedUser.isAdmin || false);
 
-      // Load bookings count from API
       const fetchBookingsCount = async () => {
         try {
           const response = await bookingAPI.getUserBookings(parsedUser._id);
@@ -39,7 +38,6 @@ export default function Navbar({ currentView }) {
     }
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -59,8 +57,8 @@ export default function Navbar({ currentView }) {
   ];
 
   const authenticatedNav = isAuthenticated && user
-    ? [...navigation, 
-        user.isProvider || user.skill 
+    ? [...navigation,
+        user.isProvider || user.skill
           ? { name: 'Provider Dashboard', href: '/provider-dashboard', icon: BookOpen }
           : { name: 'My Bookings', href: '/my-bookings', icon: BookOpen }
       ]
@@ -85,140 +83,113 @@ export default function Navbar({ currentView }) {
 
   const NavLink = ({ item, isMobile = false }) => {
     const Icon = item.icon;
-    const isActive = currentView === item.href || (currentView === 'home' && item.href === '/');
+    const isActive = item.href === '/'
+      ? location.pathname === '/'
+      : location.pathname === item.href || location.pathname.startsWith(`${item.href}/`);
     const baseClasses = isMobile
-      ? "flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-all duration-200"
-      : "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300";
-    
+      ? 'flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-medium transition-all duration-200'
+      : 'flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-300';
+
     const activeClasses = isActive
-      ? "bg-linear-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/30 shadow-lg shadow-cyan-500/5"
-      : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 border border-transparent";
+      ? 'border border-[#e7ba9a] bg-[#f9efe6] text-[#7d3d22] shadow-[0_10px_22px_rgba(201,109,66,0.08)]'
+      : 'border border-transparent text-[#5a4b45] hover:bg-[#f4e7dc] hover:text-[#1f1a17]';
 
     return (
       <a
         href={item.href}
         onClick={() => isMobile && setMobileMenuOpen(false)}
+        aria-current={isActive ? 'page' : undefined}
         className={`${baseClasses} ${activeClasses}`}
       >
-        <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
+        <Icon className={`h-4 w-4 ${isActive ? 'text-[#7d3d22]' : 'text-[#7b655f]'}`} />
         {item.name}
       </a>
     );
   };
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-800/60">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo Brand */}
-          <a href="/" className="flex items-center gap-1 cursor-pointer">
-            <img src="logo.png" alt="" className='w-15'/>
+    <nav className="sticky top-0 z-50 border-b border-[#e5d4c0] bg-[#fffaf5]/80 shadow-[0_8px_16px_rgba(70,42,28,0.04)] backdrop-blur-xl">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-20 items-center justify-between">
+          <a href="/" className="flex cursor-pointer items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-[16px] border border-[#edd1b3] bg-gradient-to-br from-[#d77a4a] via-[#e4b56f] to-[#c8c98e] shadow-[0_12px_22px_rgba(199,108,68,0.18)]">
+              <img src="logo.png" alt="GharDoctor logo" className="h-8 w-8 object-contain" />
+            </div>
             <div>
-              <span className="text-xl font-extrabold bg-linear-to-r from-white via-slate-100 to-cyan-400 bg-clip-text text-transparent tracking-tight">
-                Ghar<span className="text-cyan-400">Doctor</span>
+              <span className="text-xl font-extrabold tracking-[-0.05em] text-[#201a17]">
+                Ghar<span className="text-[#c96d42]">Doctor</span>
               </span>
-              <p className="text-[10px] text-cyan-500 font-semibold tracking-wider uppercase -mt-1">Home Services</p>
+              <p className="-mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7f6d66]">Home Services</p>
             </div>
           </a>
 
-          {/* Desktop Nav Items */}
-          <div className="hidden md:flex items-center gap-2">
-            {authenticatedNav.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentView === item.href || (currentView === 'home' && item.href === '/');
-              return (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 relative ${
-                    isActive
-                      ? "bg-linear-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/30 shadow-lg shadow-cyan-500/5"
-                      : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 border border-transparent"
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
-                  {item.name}
-                </a>
-              );
-            })}
-
-
+          <div className="hidden items-center gap-2 md:flex">
+            {authenticatedNav.map((item) => (
+              <NavLink key={item.name} item={item} />
+            ))}
 
             {isAdmin && (
               <a
                 href="/admin"
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ${
                   currentView === 'admin'
-                    ? "bg-linear-to-r from-purple-500/20 to-pink-500/20 text-purple-400 border border-purple-500/30 shadow-lg shadow-purple-500/5"
-                    : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 border border-transparent"
+                    ? 'border border-[#e7ba9a] bg-[#f9efe6] text-[#7d3d22] shadow-[0_10px_22px_rgba(201,109,66,0.08)]'
+                    : 'border border-transparent text-[#5a4b45] hover:bg-[#f4e7dc] hover:text-[#1f1a17]'
                 }`}
               >
-                <ShieldCheck className="w-4 h-4 text-purple-400" />
+                <ShieldCheck className="h-4 w-4 text-[#7d3d22]" />
                 Admin Panel
               </a>
             )}
           </div>
 
-          {/* User Section & Action Buttons */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden items-center gap-4 md:flex">
             {isAuthenticated && user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all duration-200 cursor-pointer group"
+                  className="flex cursor-pointer items-center gap-2.5 rounded-full border border-[#eadcc7] bg-[#fffdfb] px-3 py-1.5 transition-all duration-200 hover:border-[#d5b496]"
                 >
                   <ImageWithFallback
                     src={accountImage}
                     alt={`${user.firstName || 'User'} account`}
                     fallback={user.firstName?.[0] || 'U'}
-                    className="w-7 h-7 rounded-full shadow-inner"
+                    className="h-7 w-7 rounded-full border border-[#eadcc7] bg-[#f7efe8]"
                   />
-                  <span className="text-sm font-semibold text-slate-200">
-                    {user.firstName}
-                  </span>
-                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+                  <span className="text-sm font-semibold text-[#201a17]">{user.firstName}</span>
+                  <ChevronDown className={`h-4 w-4 text-[#7d6a62] transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* Dropdown Menu */}
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl z-50 overflow-hidden animate-fade-in">
-                    {/* My Bookings Option - REMOVED */}
-
-                {/* Dashboard Option */}
+                  <div className="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-2xl border border-[#eadcc7] bg-[#fffdfb] shadow-xl">
                     <a
                       href="/dashboard"
-                      onClick={() => {
-                        setDropdownOpen(false);
-                      }}
-                      className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 transition-colors duration-150 border-b border-slate-800/50"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex w-full items-center gap-3 border-b border-[#f0e5d9] px-4 py-3 text-sm font-medium text-[#3e3835] transition-colors hover:bg-[#f9efe6]"
                     >
-                      <LayoutDashboard className="w-4 h-4 text-cyan-400" />
+                      <LayoutDashboard className="h-4 w-4 text-[#b86845]" />
                       Dashboard
                     </a>
 
-                    {/* Admin Panel Option */}
                     {isAdmin && (
                       <a
                         href="/admin"
-                        onClick={() => {
-                          setDropdownOpen(false);
-                        }}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 transition-colors duration-150 border-b border-slate-800/50"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex w-full items-center gap-3 border-b border-[#f0e5d9] px-4 py-3 text-sm font-medium text-[#3e3835] transition-colors hover:bg-[#f9efe6]"
                       >
-                        <ShieldCheck className="w-4 h-4 text-purple-400" />
+                        <ShieldCheck className="h-4 w-4 text-[#7d3d22]" />
                         Admin Panel
                       </a>
                     )}
 
-                    {/* Logout Option */}
                     <button
                       onClick={() => {
                         handleLogout();
                         setDropdownOpen(false);
                       }}
-                      className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors duration-150"
+                      className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-[#8a4d2b] transition-colors hover:bg-[#f9ece9]"
                     >
-                      <LogOut className="w-4 h-4" />
+                      <LogOut className="h-4 w-4" />
                       Logout
                     </button>
                   </div>
@@ -228,13 +199,13 @@ export default function Navbar({ currentView }) {
               <div className="flex items-center gap-3">
                 <a
                   href="/login"
-                  className="px-5 py-2 text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800/40 rounded-full transition-all duration-200 cursor-pointer"
+                  className="cursor-pointer rounded-full px-5 py-2 text-sm font-semibold text-[#4b3d38] transition-all duration-200 hover:bg-[#f0e0d4] hover:text-[#201a17]"
                 >
                   Sign In
                 </a>
                 <a
                   href="/booking"
-                  className="px-5 py-2.5 text-sm font-semibold bg-linear-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 rounded-full shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/20 active:scale-95 transition-all duration-200 cursor-pointer"
+                  className="cursor-pointer rounded-full bg-gradient-to-r from-[#d77a4a] to-[#d9b46f] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#d77a4a]/20 transition-all duration-200 hover:brightness-105 active:scale-95"
                 >
                   Book Now
                 </a>
@@ -242,77 +213,62 @@ export default function Navbar({ currentView }) {
             )}
           </div>
 
-          {/* Mobile Menu toggle button */}
           <div className="flex md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 border border-slate-800 focus:outline-none transition-all duration-200"
+              className="rounded-xl border border-[#eadcc7] bg-[#fffdfb] p-2 text-[#5e4d48] transition-all hover:text-[#201a17]"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile drawer panel */}
       {mobileMenuOpen && (
-        <div className="md:hidden animate-fade-in bg-slate-950 border-b border-slate-800">
-          <div className="px-2 pt-2 pb-4 space-y-1.5 sm:px-3">
-              {authenticatedNav.map((item) => {
-                const Icon = item.icon;
-                const isActive = currentView === item.href || (currentView === 'home' && item.href === '/');
-                return (
-                  <a
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 relative ${
-                      isActive
-                        ? "bg-linear-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/30"
-                        : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
-                    {item.name}
-                  </a>
-                );
-              })}
+        <div className="border-b border-[#e5d4c0] bg-[#fffaf5] md:hidden">
+          <div className="space-y-1.5 px-2 pb-4 pt-2 sm:px-3">
+            {authenticatedNav.map((item) => {
+              return <NavLink key={item.name} item={item} isMobile />;
+            })}
 
-
-
-            <div className="pt-4 mt-2 border-t border-slate-800/80 px-4">
+            <div className="mt-2 border-t border-[#eadcc7] px-4 pt-4">
               {isAuthenticated && user ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 py-1">
-                    <ImageWithFallback src={accountImage} alt={`${user.firstName || 'User'} account`} fallback={user.firstName?.[0] || 'U'} className="w-8 h-8 rounded-full" />
+                    <ImageWithFallback
+                      src={accountImage}
+                      alt={`${user.firstName || 'User'} account`}
+                      fallback={user.firstName?.[0] || 'U'}
+                      className="h-8 w-8 rounded-full border border-[#eadcc7] bg-[#f7efe8]"
+                    />
                     <div>
-                      <p className="text-sm font-semibold text-slate-200">{user.firstName} {user.lastName}</p>
-                      <p className="text-xs text-slate-500">{user.email}</p>
+                      <p className="text-sm font-semibold text-[#201a17]">{user.firstName} {user.lastName}</p>
+                      <p className="text-xs text-[#7d6a62]">{user.email}</p>
                     </div>
                   </div>
                   <a
                     href="/dashboard"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900 text-slate-300 hover:text-slate-100 font-semibold transition-all duration-200 cursor-pointer"
+                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#eadcc7] bg-[#fffdfb] py-2.5 font-semibold text-[#3e3835] transition-all duration-200 hover:border-[#d5b496] hover:text-[#201a17]"
                   >
-                    <LayoutDashboard className="w-4 h-4" />
+                    <LayoutDashboard className="h-4 w-4" />
                     Dashboard
                   </a>
                   {isAdmin && (
                     <a
                       href="/admin"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-purple-800 hover:border-purple-700 bg-purple-900/20 text-purple-300 hover:text-purple-200 font-semibold transition-all duration-200 cursor-pointer"
+                      className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#eadcc7] bg-[#f9efe6] py-2.5 font-semibold text-[#7d3d22] transition-all duration-200 hover:border-[#e7ba9a]"
                     >
-                      <ShieldCheck className="w-4 h-4" />
+                      <ShieldCheck className="h-4 w-4" />
                       Admin Panel
                     </a>
                   )}
                   <button
                     onClick={handleLogout}
-                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900 text-slate-300 font-semibold transition-all duration-200 cursor-pointer"
+                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#eadcc7] bg-[#fffaf5] py-2.5 font-semibold text-[#8a4d2b] transition-all duration-200 hover:border-[#d5b496]"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="h-4 w-4" />
                     Logout
                   </button>
                 </div>
@@ -321,14 +277,14 @@ export default function Navbar({ currentView }) {
                   <a
                     href="/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="py-2.5 rounded-xl text-center border border-slate-800 hover:border-slate-700 text-slate-300 font-semibold text-sm transition-all duration-200 cursor-pointer"
+                    className="cursor-pointer rounded-xl border border-[#eadcc7] bg-[#fffaf5] py-2.5 text-center text-sm font-semibold text-[#4b3d38] transition-all duration-200 hover:border-[#d5b496] hover:text-[#201a17]"
                   >
                     Sign In
                   </a>
                   <a
                     href="/booking"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="py-2.5 rounded-xl text-center bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm transition-all duration-200 cursor-pointer shadow-md shadow-cyan-500/10"
+                    className="cursor-pointer rounded-xl bg-gradient-to-r from-[#d77a4a] to-[#d9b46f] py-2.5 text-center text-sm font-bold text-white shadow-lg shadow-[#d77a4a]/20 transition-all duration-200 hover:brightness-105"
                   >
                     Book Now
                   </a>

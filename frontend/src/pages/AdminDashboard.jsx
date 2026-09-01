@@ -27,13 +27,11 @@ function AdminDashboardContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get user from localStorage
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
 
-    // Fetch statistics
     fetchStats();
   }, []);
 
@@ -103,7 +101,7 @@ function AdminDashboardContent() {
           .map((service, index) => ({
             ...service,
             value: Math.round((service.count / highestBookingCount) * 100),
-            color: ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500'][index % 5],
+            color: ['bg-[#d77a4a]', 'bg-[#8a9d6f]', 'bg-[#c89a5d]', 'bg-[#af7d8d]', 'bg-[#4a7d7a]'][index % 5],
           }))
       );
 
@@ -118,10 +116,12 @@ function AdminDashboardContent() {
             : `New booking: ${item.serviceName}`,
         })),
       ];
-      setRecentActivities(activityItems
-        .filter((item) => item.date)
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 4));
+      setRecentActivities(
+        activityItems
+          .filter((item) => item.date)
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
+          .slice(0, 4)
+      );
     } catch (error) {
       console.error('Error in fetchStats:', error);
     } finally {
@@ -141,30 +141,27 @@ function AdminDashboardContent() {
   };
 
   const StatCard = ({ icon: Icon, title, value, bgColor, iconColor }) => (
-    <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 md:p-6 hover:border-slate-600/50 transition-all">
+    <div className="rounded-[26px] border border-[#eadcc7] bg-[#fffdfb] p-4 shadow-[0_14px_32px_rgba(70,42,28,0.03)] transition-all duration-200 hover:border-[#e7ba9a] md:p-6">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <p className="text-slate-400 text-xs md:text-sm font-medium">{title}</p>
-          <p className="text-2xl md:text-3xl font-bold text-slate-100 mt-1 md:mt-2 truncate">{value}</p>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7d6a62] md:text-sm">{title}</p>
+          <p className="mt-2 truncate text-2xl font-black tracking-[-0.05em] text-[#201a17] md:text-3xl">{value}</p>
         </div>
-        <div className={`${bgColor} p-2 md:p-4 rounded-xl shrink-0`}>
-          <Icon className={`w-5 h-5 md:w-6 md:h-6 ${iconColor}`} />
+        <div className={`${bgColor} shrink-0 rounded-2xl p-2 md:p-4`}>
+          <Icon className={`h-5 w-5 md:h-6 md:w-6 ${iconColor}`} />
         </div>
       </div>
     </div>
   );
 
   const ChartBar = ({ label, value, count, color }) => (
-    <div className="mb-4 md:mb-6">
-      <div className="flex items-center justify-between mb-1.5 md:mb-2 gap-2">
-        <span className="text-xs md:text-sm font-medium text-slate-400 truncate">{label}</span>
-        <span className="text-xs md:text-sm font-semibold text-slate-100 shrink-0">{count} booking{count === 1 ? '' : 's'}</span>
+    <div className="mb-5">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <span className="truncate text-xs font-medium text-[#695d59] md:text-sm">{label}</span>
+        <span className="shrink-0 text-xs font-semibold text-[#201a17] md:text-sm">{count} booking{count === 1 ? '' : 's'}</span>
       </div>
-      <div className="w-full bg-slate-700/50 rounded-full h-2">
-        <div
-          className={`${color} h-2 rounded-full transition-all duration-300`}
-          style={{ width: `${value}%` }}
-        ></div>
+      <div className="h-2.5 w-full rounded-full bg-[#f2e6dc]">
+        <div className={`${color} h-2.5 rounded-full transition-all duration-300`} style={{ width: `${value}%` }}></div>
       </div>
     </div>
   );
@@ -177,109 +174,78 @@ function AdminDashboardContent() {
     return `${Math.floor(seconds / 86400)} day${Math.floor(seconds / 86400) === 1 ? '' : 's'} ago`;
   };
 
-  const activityColors = { user: 'bg-cyan-400', provider: 'bg-emerald-400', completed: 'bg-orange-400', booking: 'bg-purple-400' };
+  const activityColors = { user: 'bg-[#d77a4a]', provider: 'bg-[#6f8d60]', completed: 'bg-[#c89a5d]', booking: 'bg-[#8a6ca7]' };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-950">
-        <div className="text-slate-400">Loading dashboard...</div>
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f1ea]">
+        <div className="text-[#655d5a]">Loading dashboard...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-slate-950 overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-[#f7f1ea]">
       <AdminSidebar />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden">
         <AdminHeader title="Admin Dashboard" subtitle={`Welcome back, ${user?.firstName}!`} user={user} />
 
-        {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          <div className="p-3 md:p-4 lg:p-6 space-y-6 md:space-y-8">
-            {/* Statistics Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
-              <StatCard
-                icon={Users}
-                title="Total Users"
-                value={stats.totalUsers}
-                bgColor="bg-blue-500/10"
-                iconColor="text-blue-400"
-              />
-              <StatCard
-                icon={UserCheck}
-                title="Service Providers"
-                value={stats.totalProviders}
-                bgColor="bg-emerald-500/10"
-                iconColor="text-emerald-400"
-              />
-              <StatCard
-                icon={Briefcase}
-                title="Total Services"
-                value={stats.totalServices}
-                bgColor="bg-purple-500/10"
-                iconColor="text-purple-400"
-              />
-              <StatCard
-                icon={TrendingUp}
-                title="Total Bookings"
-                value={stats.totalBookings}
-                bgColor="bg-orange-500/10"
-                iconColor="text-orange-400"
-              />
+          <div className="space-y-6 p-3 md:space-y-8 md:p-4 lg:p-6">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 md:gap-4 lg:gap-6">
+              <StatCard icon={Users} title="Total Users" value={stats.totalUsers} bgColor="bg-[#edf6ff]" iconColor="text-[#3d77a6]" />
+              <StatCard icon={UserCheck} title="Service Providers" value={stats.totalProviders} bgColor="bg-[#edf6ee]" iconColor="text-[#456d4c]" />
+              <StatCard icon={Briefcase} title="Total Services" value={stats.totalServices} bgColor="bg-[#f6eee9]" iconColor="text-[#8a4d2b]" />
+              <StatCard icon={TrendingUp} title="Total Bookings" value={stats.totalBookings} bgColor="bg-[#fff0d8]" iconColor="text-[#b5721d]" />
             </div>
 
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-              {/* Analytics Chart */}
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 md:p-6">
-                <h3 className="text-base md:text-lg font-bold text-slate-100 mb-4 md:mb-6">Service Performance</h3>
+            <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-2">
+              <div className="rounded-[26px] border border-[#eadcc7] bg-[#fffdfb] p-4 shadow-[0_14px_32px_rgba(70,42,28,0.03)] md:p-6">
+                <h3 className="mb-4 text-base font-black tracking-[-0.04em] text-[#201a17] md:mb-6 md:text-lg">Service Performance</h3>
                 {servicePerformance.length ? servicePerformance.map((service) => (
                   <ChartBar key={service.label} {...service} />
                 )) : (
-                  <p className="text-sm text-slate-400">No booking data available yet.</p>
+                  <p className="text-sm text-[#655d5a]">No booking data available yet.</p>
                 )}
               </div>
 
-              {/* Activity Overview */}
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 md:p-6">
-                <h3 className="text-base md:text-lg font-bold text-slate-100 mb-4 md:mb-6">Monthly Overview</h3>
+              <div className="rounded-[26px] border border-[#eadcc7] bg-[#fffdfb] p-4 shadow-[0_14px_32px_rgba(70,42,28,0.03)] md:p-6">
+                <h3 className="mb-4 text-base font-black tracking-[-0.04em] text-[#201a17] md:mb-6 md:text-lg">Monthly Overview</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-2 md:p-3 bg-slate-700/30 rounded-lg">
-                    <span className="text-xs md:text-sm text-slate-300">New Users This Month</span>
-                    <span className="text-base md:text-lg font-semibold text-cyan-400">{monthlyOverview.newUsers}</span>
+                  <div className="flex items-center justify-between rounded-2xl bg-[#f8f1ea] p-2 md:p-3">
+                    <span className="text-xs text-[#5c514d] md:text-sm">New Users This Month</span>
+                    <span className="text-base font-bold text-[#b86845] md:text-lg">{monthlyOverview.newUsers}</span>
                   </div>
-                  <div className="flex items-center justify-between p-2 md:p-3 bg-slate-700/30 rounded-lg">
-                    <span className="text-xs md:text-sm text-slate-300">Active Providers</span>
-                    <span className="text-base md:text-lg font-semibold text-emerald-400">{monthlyOverview.activeProviders}</span>
+                  <div className="flex items-center justify-between rounded-2xl bg-[#f3f6ee] p-2 md:p-3">
+                    <span className="text-xs text-[#5c514d] md:text-sm">Active Providers</span>
+                    <span className="text-base font-bold text-[#4f6d4c] md:text-lg">{monthlyOverview.activeProviders}</span>
                   </div>
-                  <div className="flex items-center justify-between p-2 md:p-3 bg-slate-700/30 rounded-lg">
-                    <span className="text-xs md:text-sm text-slate-300">Completed Bookings</span>
-                    <span className="text-base md:text-lg font-semibold text-orange-400">{monthlyOverview.completedBookings}</span>
+                  <div className="flex items-center justify-between rounded-2xl bg-[#fff1e2] p-2 md:p-3">
+                    <span className="text-xs text-[#5c514d] md:text-sm">Completed Bookings</span>
+                    <span className="text-base font-bold text-[#b5721d] md:text-lg">{monthlyOverview.completedBookings}</span>
                   </div>
-                  <div className="flex items-center justify-between p-2 md:p-3 bg-slate-700/30 rounded-lg">
-                    <span className="text-xs md:text-sm text-slate-300">Customer Satisfaction</span>
-                    <span className="text-base md:text-lg font-semibold text-purple-400">{monthlyOverview.satisfaction.toFixed(1)}/5</span>
+                  <div className="flex items-center justify-between rounded-2xl bg-[#f5efe8] p-2 md:p-3">
+                    <span className="text-xs text-[#5c514d] md:text-sm">Customer Satisfaction</span>
+                    <span className="text-base font-bold text-[#7b5f89] md:text-lg">{monthlyOverview.satisfaction.toFixed(1)}/5</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Recent Activity */}
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 md:p-6">
-              <h3 className="text-base md:text-lg font-bold text-slate-100 mb-4 md:mb-6">Recent Activities</h3>
+            <div className="rounded-[26px] border border-[#eadcc7] bg-[#fffdfb] p-4 shadow-[0_14px_32px_rgba(70,42,28,0.03)] md:p-6">
+              <h3 className="mb-4 text-base font-black tracking-[-0.04em] text-[#201a17] md:mb-6 md:text-lg">Recent Activities</h3>
               <div className="space-y-2 md:space-y-3">
                 {recentActivities.length ? recentActivities.map((activity, index) => (
-                  <div key={`${activity.type}-${activity.date}-${index}`} className="flex items-center gap-3 md:gap-4 p-2 md:p-3 bg-slate-700/20 rounded-lg">
-                    <div className={`w-2 h-2 ${activityColors[activity.type]} rounded-full shrink-0`}></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs md:text-sm text-slate-300 truncate">{activity.text}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{formatRelativeTime(activity.date)}</p>
+                  <div key={`${activity.type}-${activity.date}-${index}`} className="flex items-center gap-3 rounded-2xl bg-[#f8f3ee] p-2 md:gap-4 md:p-3">
+                    <div className={`h-2.5 w-2.5 shrink-0 rounded-full ${activityColors[activity.type]}`}></div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs text-[#3e3835] md:text-sm">{activity.text}</p>
+                      <p className="mt-0.5 text-[11px] text-[#7d6a62]">{formatRelativeTime(activity.date)}</p>
                     </div>
                   </div>
                 )) : (
-                  <p className="text-sm text-slate-400">No recent activity yet.</p>
+                  <p className="text-sm text-[#655d5a]">No recent activity yet.</p>
                 )}
               </div>
             </div>
@@ -297,3 +263,4 @@ export default function AdminDashboard() {
     </AdminLayoutProvider>
   );
 }
+

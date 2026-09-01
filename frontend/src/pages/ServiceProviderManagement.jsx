@@ -22,6 +22,7 @@ const ServiceProviderManagementContent = () => {
     email: '',
     password: '',
     phone: '',
+    citizenshipNumber: '',
     skill: '',
     experience: 0,
     availability: true,
@@ -93,6 +94,7 @@ const ServiceProviderManagementContent = () => {
       email: '',
       password: '',
       phone: '',
+      citizenshipNumber: '',
       skill: '',
       experience: 0,
       availability: true,
@@ -112,6 +114,7 @@ const ServiceProviderManagementContent = () => {
       email: provider.email,
       password: '',
       phone: provider.phone,
+      citizenshipNumber: provider.citizenshipNumber || '',
       skill: provider.skill,
       experience: provider.experience,
       availability: provider.availability,
@@ -131,6 +134,7 @@ const ServiceProviderManagementContent = () => {
       email: '',
       password: '',
       phone: '',
+      citizenshipNumber: '',
       skill: '',
       experience: 0,
       availability: true,
@@ -142,7 +146,7 @@ const ServiceProviderManagementContent = () => {
 
   const handleSave = async () => {
     try {
-      if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.skill || !formData.citizenshipImage) {
+      if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.citizenshipNumber || !formData.skill || !formData.citizenshipImage) {
         setError('Please fill in all required fields');
         return;
       }
@@ -456,6 +460,19 @@ const ServiceProviderManagementContent = () => {
                   type="tel"
                   name="phone"
                   value={formData.phone}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  Citizenship Number *
+                </label>
+                <input
+                  type="text"
+                  name="citizenshipNumber"
+                  value={formData.citizenshipNumber}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />

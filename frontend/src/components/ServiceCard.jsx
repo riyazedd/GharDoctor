@@ -1,66 +1,66 @@
-import { Star, Clock } from 'lucide-react';
+import { Star, Clock, CheckCircle2 } from 'lucide-react';
 
 export default function ServiceCard({ service, onBookNow }) {
   return (
-    <div
-      key={service._id}
-      className="group flex flex-col justify-between overflow-hidden rounded-3xl bg-slate-900/20 border border-slate-900 hover:border-slate-800/80 shadow-lg transition-all duration-300"
-    >
-      {/* Image Header */}
-      <div className="relative h-48 overflow-hidden">
+    <article className="group flex flex-col gap-0 border-b border-[#f0e5d9] py-6 sm:flex-row sm:gap-6 sm:py-7 sm:px-0">
+      <div className="relative h-48 w-full overflow-hidden sm:h-auto sm:w-56 shrink-0 rounded-[20px]">
         <img
           src={service.image}
           alt={service.serviceName}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
         />
-        <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/20 to-transparent" />
-        <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-slate-955/80 backdrop-blur-md border border-slate-800/60 text-xs font-semibold text-cyan-400">
+        <div className="absolute left-3 top-3 rounded-full bg-[#fffaf3] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a5a3c]">
           {service.category}
         </div>
       </div>
 
-      {/* Info block */}
-      <div className="p-6 grow flex flex-col justify-between space-y-4">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-slate-200 group-hover:text-cyan-400 transition-colors text-base line-clamp-1">
+      <div className="flex w-full flex-col justify-between">
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-2xl font-black leading-tight tracking-[-0.05em] text-[#201a17]">
               {service.serviceName}
             </h3>
-            {/* <div className="flex items-center gap-1 text-amber-400 text-xs font-semibold shrink-0">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-transparent" />
-              <span>{service.rating || 4.5}</span>
-            </div> */}
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#5f524f]">
+              {service.description}
+            </p>
           </div>
-          <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">
-            {service.description}
-          </p>
-          <div className="flex items-center gap-3 text-xs text-slate-600 pt-1.5">
-            <div className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              <span>{service.duration || '2-3 hours'}</span>
+
+          <div className="flex flex-wrap items-center gap-4 pt-2 text-xs sm:text-sm">
+            <div className="flex items-center gap-1.5 text-[#927e6d]">
+              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="font-medium">{service.duration || '2-3 hours'}</span>
             </div>
+            <span className="h-4 w-px bg-[#cab7a9]"></span>
+            <div className="flex items-center gap-1.5 text-[#a67d51]">
+              <Star className="h-3.5 w-3.5 fill-[#d9b46f] text-[#d9b46f] sm:h-4 sm:w-4" />
+              <span className="font-medium">{service.rating || 4.8}</span>
+            </div>
+            <span className="h-4 w-px bg-[#cab7a9]"></span>
+            <span className={`font-medium ${service.isAvailable ? 'text-[#3d6a4b]' : 'text-[#7c6b63]'}`}>
+              {service.isAvailable ? 'Available' : 'Unavailable'}
+            </span>
           </div>
         </div>
 
-        {/* Footer Booking actions */}
-        <div className="pt-4 border-t border-slate-900/60 flex items-center justify-between">
+        <div className="mt-6 flex flex-col gap-5 sm:mt-auto sm:flex-row sm:items-end sm:justify-between sm:pt-2">
           <div>
-            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Total Price</span>
-            <span className="text-lg font-black text-cyan-400">Rs. {service.price}</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#866d63]">Starting from</span>
+            <div className="mt-2 text-3xl font-black tracking-[-0.05em] text-[#b86845]">Rs. {service.price}</div>
           </div>
+
           <button
             onClick={() => onBookNow(service)}
             disabled={!service.isAvailable}
-            className={`px-4.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer shadow-md ${
+            className={`rounded-full px-6 py-3 text-sm font-bold transition-all duration-200 w-full sm:w-auto ${
               service.isAvailable
-                ? "bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/5 active:scale-95"
-                : "bg-slate-850 text-slate-500 cursor-not-allowed shadow-none"
+                ? 'bg-[#d77a4a] text-white shadow-[0_8px_16px_rgba(201,109,66,0.12)] hover:bg-[#c96838]'
+                : 'cursor-not-allowed bg-[#efe6de] text-[#a2938c]'
             }`}
           >
-            {service.isAvailable ? 'Book Service' : 'Unavailable'}
+            {service.isAvailable ? 'Book now' : 'Unavailable'}
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

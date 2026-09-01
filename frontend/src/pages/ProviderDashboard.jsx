@@ -39,7 +39,6 @@ export default function ProviderDashboard() {
     activeBookingId: activeChatBooking?._id || null,
   });
 
-  // Check authentication and provider status on mount
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
@@ -50,7 +49,6 @@ export default function ProviderDashboard() {
       return;
     }
 
-    // Check if user is a provider
     if (!userData.isProvider && !userData.skill) {
       navigate('/');
       return;
@@ -167,45 +165,41 @@ export default function ProviderDashboard() {
   };
 
   const updateBookingStatus = async (bookingId, status) => {
-  if (
-    !window.confirm(
-      `Are you sure you want to mark this booking as ${status}?`
-    )
-  ) {
-    return;
-  }
+    if (!window.confirm(`Are you sure you want to mark this booking as ${status}?`)) {
+      return;
+    }
 
-  try {
-    const response = await bookingAPI.updateBooking(bookingId, { status });
+    try {
+      const response = await bookingAPI.updateBooking(bookingId, { status });
 
-    setBookings((prev) =>
-      prev.map((booking) =>
-        booking._id === bookingId ? response.data : booking
-      )
-    );
+      setBookings((prev) =>
+        prev.map((booking) =>
+          booking._id === bookingId ? response.data : booking
+        )
+      );
 
-    setSuccess(`Booking ${status.toLowerCase()} successfully.`);
-    setTimeout(() => setSuccess(""), 3000);
-  } catch (err) {
-    console.error(err);
-    setError("Failed to update booking.");
-    setTimeout(() => setError(""), 3000);
-  }
-};
+      setSuccess(`Booking ${status.toLowerCase()} successfully.`);
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to update booking.');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
-        <div className="text-center space-y-6">
-          <AlertCircle className="w-12 h-12 text-slate-500 mx-auto" />
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f1ea] px-4">
+        <div className="space-y-6 text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-[#7d6a62]" />
           <div>
-            <h2 className="text-2xl font-bold text-slate-200 mb-2">Not Logged In</h2>
-            <p className="text-slate-400 mb-6">Please sign in to view your provider dashboard.</p>
+            <h2 className="mb-2 text-2xl font-black tracking-[-0.05em] text-[#201a17]">Not logged in</h2>
+            <p className="mb-6 text-[#655d5a]">Please sign in to view your provider dashboard.</p>
             <button
               onClick={() => navigate('/login')}
-              className="px-6 py-3 bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold rounded-xl transition-all"
+              className="rounded-full bg-gradient-to-r from-[#d77a4a] to-[#d9b46f] px-6 py-3 font-bold text-white shadow-[0_16px_26px_rgba(199,108,68,0.18)] transition-all hover:brightness-105"
             >
-              Sign In
+              Sign in
             </button>
           </div>
         </div>
@@ -218,78 +212,76 @@ export default function ProviderDashboard() {
   const completedBookings = bookings.filter((booking) => booking.status === 'Completed');
 
   return (
-    <div className="min-h-screen bg-slate-950 pt-8 pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        {/* Header */}
-        <div className="bg-slate-900/40 border border-slate-800/60 rounded-3xl p-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="flex items-center gap-4 flex-1">
+    <div className="min-h-screen bg-[#f7f1ea] pb-16 pt-8">
+      <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
+        <div className="rounded-[30px] border border-[#eadcc7] bg-[#fffdfb] p-8 shadow-[0_16px_40px_rgba(61,38,26,0.06)]">
+          <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+            <div className="flex flex-1 items-center gap-4">
               <ImageWithFallback
                 src={user.avatar || user.profileImg}
                 alt={`${user.firstName || 'Provider'} avatar`}
                 fallback={user.firstName?.[0] || 'P'}
-                className="w-16 h-16 rounded-2xl shadow-lg"
+                className="h-16 w-16 rounded-[20px] border border-[#eadcc7] bg-[#f7efe8] shadow-[0_10px_24px_rgba(70,42,28,0.08)]"
               />
               <div>
-                <h1 className="text-3xl font-extrabold text-slate-100">
+                <h1 className="text-3xl font-black tracking-[-0.06em] text-[#201a17]">
                   Welcome, {user.firstName}!
                 </h1>
-                <p className="text-sm text-slate-400 mt-1">Service Provider Dashboard</p>
+                <p className="mt-1 text-sm text-[#655d5a]">Service Provider Dashboard</p>
               </div>
             </div>
 
-            <div className="flex gap-3 w-full md:w-auto flex-wrap md:flex-nowrap">
+            <div className="flex w-full flex-wrap gap-3 md:w-auto md:flex-nowrap">
               <button
                 onClick={toggleAvailability}
-                className={`flex items-center justify-center gap-2 px-5 py-2.5 font-bold rounded-xl transition-all ${
+                className={`flex items-center justify-center gap-2 rounded-full px-5 py-2.5 font-bold transition-all ${
                   user.availability
-                    ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-slate-700/50 hover:bg-slate-700/70 text-slate-300 border border-slate-600'
+                    ? 'border border-[#bfd6b4] bg-[#edf6ee] text-[#2f6a44]'
+                    : 'border border-[#eadcc7] bg-[#f5efe8] text-[#5f524d]'
                 }`}
               >
-                <Power className="w-4 h-4" />
+                <Power className="h-4 w-4" />
                 {user.availability ? 'Available' : 'Unavailable'}
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center justify-center gap-2 px-5 py-2.5 border border-slate-700 hover:border-slate-600 text-slate-300 hover:text-slate-100 font-bold rounded-xl transition-all"
+                className="flex items-center justify-center gap-2 rounded-full border border-[#eadcc7] bg-[#fffaf5] px-5 py-2.5 font-bold text-[#5b4d49] transition-all hover:text-[#201a17]"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="h-4 w-4" />
                 Logout
               </button>
             </div>
           </div>
         </div>
 
-        {/* Notifications */}
         {success && (
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-            <CheckCircle className="w-5 h-5 shrink-0" />
+          <div className="flex items-center gap-3 rounded-[20px] border border-[#bfd6b4] bg-[#edf6ee] p-4 text-[#2b5d3f]">
+            <CheckCircle className="h-5 w-5 shrink-0" />
             <p className="text-sm font-semibold">{success}</p>
           </div>
         )}
 
         {error && (
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400">
-            <AlertCircle className="w-5 h-5 shrink-0" />
+          <div className="flex items-center gap-3 rounded-[20px] border border-[#e9c1b7] bg-[#f9ece9] p-4 text-[#8a4d2b]">
+            <AlertCircle className="h-5 w-5 shrink-0" />
             <p className="text-sm font-semibold">{error}</p>
           </div>
         )}
 
         {notification && (
-          <div className="fixed bottom-5 right-5 z-40 w-[calc(100vw-2rem)] max-w-sm rounded-2xl border border-cyan-500/30 bg-slate-950 shadow-2xl shadow-cyan-500/10 p-4">
+          <div className="fixed bottom-5 right-5 z-40 w-[calc(100vw-2rem)] max-w-sm rounded-[24px] border border-[#e7ba9a] bg-[#fffdfb] p-4 shadow-[0_18px_40px_rgba(61,38,26,0.12)]">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-400 mb-1">New message</p>
-                <h3 className="text-sm font-bold text-slate-100">{notification.title}</h3>
-                <p className="text-sm text-slate-400 mt-1 line-clamp-2">{notification.message}</p>
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.24em] text-[#b86845]">New message</p>
+                <h3 className="text-sm font-bold text-[#201a17]">{notification.title}</h3>
+                <p className="mt-1 line-clamp-2 text-sm text-[#655d5a]">{notification.message}</p>
               </div>
               <button
                 type="button"
                 onClick={dismissNotification}
-                className="text-slate-500 hover:text-slate-200 transition-colors"
+                className="text-[#7d6a62] transition-colors hover:text-[#201a17]"
               >
-                <AlertCircle className="w-5 h-5" />
+                <AlertCircle className="h-5 w-5" />
               </button>
             </div>
             <div className="mt-4 flex gap-2">
@@ -302,14 +294,14 @@ export default function ProviderDashboard() {
                   }
                   dismissNotification();
                 }}
-                className="flex-1 rounded-xl bg-cyan-500 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-cyan-400 transition-colors"
+                className="flex-1 rounded-full bg-gradient-to-r from-[#d77a4a] to-[#d9b46f] px-4 py-2 text-sm font-bold text-white transition-colors"
               >
-                View Chat
+                View chat
               </button>
               <button
                 type="button"
                 onClick={dismissNotification}
-                className="rounded-xl border border-slate-800 px-4 py-2 text-sm font-semibold text-slate-300 hover:border-slate-700 hover:text-slate-100 transition-colors"
+                className="rounded-full border border-[#eadcc7] bg-[#fffaf5] px-4 py-2 text-sm font-semibold text-[#5b4d49] transition-colors hover:text-[#201a17]"
               >
                 Dismiss
               </button>
@@ -317,133 +309,130 @@ export default function ProviderDashboard() {
           </div>
         )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-[24px] border border-[#eadcc7] bg-[#fffdfb] p-6 shadow-[0_14px_32px_rgba(70,42,28,0.03)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-semibold mb-1">Total Bookings</p>
-                <p className="text-3xl font-bold text-emerald-400">{bookings.length}</p>
+                <p className="mb-1 text-sm font-semibold text-[#7d6a62]">Total Bookings</p>
+                <p className="text-3xl font-black tracking-[-0.05em] text-[#201a17]">{bookings.length}</p>
               </div>
-              <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
-                <CheckCircle className="w-6 h-6" />
+              <div className="rounded-2xl bg-[#edf6ee] p-3 text-[#456d4c]">
+                <CheckCircle className="h-6 w-6" />
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
+          <div className="rounded-[24px] border border-[#eadcc7] bg-[#fffdfb] p-6 shadow-[0_14px_32px_rgba(70,42,28,0.03)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-semibold mb-1">Scheduled</p>
-                <p className="text-3xl font-bold text-cyan-400">{scheduledBookings.length}</p>
+                <p className="mb-1 text-sm font-semibold text-[#7d6a62]">Scheduled</p>
+                <p className="text-3xl font-black tracking-[-0.05em] text-[#201a17]">{scheduledBookings.length}</p>
               </div>
-              <div className="p-3 bg-cyan-500/10 rounded-xl text-cyan-400">
-                <Calendar className="w-6 h-6" />
+              <div className="rounded-2xl bg-[#edf6ff] p-3 text-[#3d77a6]">
+                <Calendar className="h-6 w-6" />
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
+          <div className="rounded-[24px] border border-[#eadcc7] bg-[#fffdfb] p-6 shadow-[0_14px_32px_rgba(70,42,28,0.03)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-semibold mb-1">In Progress</p>
-                <p className="text-3xl font-bold text-yellow-400">{inProgressBookings.length}</p>
+                <p className="mb-1 text-sm font-semibold text-[#7d6a62]">In Progress</p>
+                <p className="text-3xl font-black tracking-[-0.05em] text-[#201a17]">{inProgressBookings.length}</p>
               </div>
-              <div className="p-3 bg-yellow-500/10 rounded-xl text-yellow-400">
-                <Star className="w-6 h-6" />
+              <div className="rounded-2xl bg-[#fff0d8] p-3 text-[#b5721d]">
+                <Star className="h-6 w-6" />
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
+          <div className="rounded-[24px] border border-[#eadcc7] bg-[#fffdfb] p-6 shadow-[0_14px_32px_rgba(70,42,28,0.03)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-semibold mb-1">Completed</p>
-                <p className="text-3xl font-bold text-blue-400">{completedBookings.length}</p>
+                <p className="mb-1 text-sm font-semibold text-[#7d6a62]">Completed</p>
+                <p className="text-3xl font-black tracking-[-0.05em] text-[#201a17]">{completedBookings.length}</p>
               </div>
-              <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400">
-                <Activity className="w-6 h-6" />
+              <div className="rounded-2xl bg-[#f4efe8] p-3 text-[#8a4d2b]">
+                <Activity className="h-6 w-6" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-slate-800 pb-2 gap-2">
+        <div className="flex gap-2 border-b border-[#eadcc7] pb-2">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`px-5 py-2.5 rounded-lg font-semibold transition-all ${
+            className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all ${
               activeTab === 'dashboard'
-                ? 'bg-emerald-500/15 text-emerald-400 border-b-2 border-emerald-400'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'border border-[#e7ba9a] bg-[#f9efe6] text-[#8e4d2f]'
+                : 'text-[#655d5a] hover:text-[#201a17]'
             }`}
           >
             Dashboard
           </button>
           <button
             onClick={() => setActiveTab('requests')}
-            className={`px-5 py-2.5 rounded-lg font-semibold transition-all ${
+            className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all ${
               activeTab === 'requests'
-                ? 'bg-emerald-500/15 text-emerald-400 border-b-2 border-emerald-400'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'border border-[#e7ba9a] bg-[#f9efe6] text-[#8e4d2f]'
+                : 'text-[#655d5a] hover:text-[#201a17]'
             }`}
           >
             Bookings ({bookings.length})
           </button>
           <button
             onClick={() => setActiveTab('profile')}
-            className={`px-5 py-2.5 rounded-lg font-semibold transition-all ${
+            className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all ${
               activeTab === 'profile'
-                ? 'bg-emerald-500/15 text-emerald-400 border-b-2 border-emerald-400'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'border border-[#e7ba9a] bg-[#f9efe6] text-[#8e4d2f]'
+                : 'text-[#655d5a] hover:text-[#201a17]'
             }`}
           >
             Profile
           </button>
         </div>
 
-        {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-100 border-b border-slate-800 pb-4">Overview</h2>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-slate-100 mb-4">Recent Activity</h3>
+            <h2 className="border-b border-[#eadcc7] pb-4 text-2xl font-black tracking-[-0.05em] text-[#201a17]">Overview</h2>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="rounded-[24px] border border-[#eadcc7] bg-[#fffdfb] p-6 lg:col-span-2">
+                <h3 className="mb-4 text-lg font-black tracking-[-0.04em] text-[#201a17]">Recent Activity</h3>
                 {bookings.length > 0 ? (
                   <div className="space-y-3">
-                    {bookings.slice(0, 5).map(booking => (
-                      <div key={booking._id || booking.bookingId} className="flex items-center gap-4 p-3 bg-slate-900/50 rounded-xl border border-slate-800">
-                        <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                    {bookings.slice(0, 5).map((booking) => (
+                      <div key={booking._id || booking.bookingId} className="flex items-center gap-4 rounded-2xl border border-[#f0e5d9] bg-[#f8f3ee] p-3">
+                        <div className="h-2.5 w-2.5 rounded-full bg-[#6f8d60]"></div>
                         <div className="flex-1">
-                          <p className="text-slate-100 font-semibold">{booking.serviceName}</p>
-                          <p className="text-xs text-slate-400">{booking.date} at {booking.time}</p>
+                          <p className="font-semibold text-[#201a17]">{booking.serviceName}</p>
+                          <p className="text-xs text-[#655d5a]">{booking.date} at {booking.time}</p>
                         </div>
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400">
+                        <span className="rounded-full bg-[#edf6ee] px-2.5 py-1 text-[10px] font-bold text-[#2f6a44]">
                           {booking.status}
                         </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-slate-400 text-center py-8">No bookings yet</p>
+                  <p className="py-8 text-center text-[#655d5a]">No bookings yet</p>
                 )}
               </div>
 
-              <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-slate-100 mb-4">Your Info</h3>
+              <div className="rounded-[24px] border border-[#eadcc7] bg-[#fffdfb] p-6">
+                <h3 className="mb-4 text-lg font-black tracking-[-0.04em] text-[#201a17]">Your info</h3>
                 <div className="space-y-4">
                   <div>
-                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Category</p>
-                    <p className="text-slate-200 font-semibold">{user.skill}</p>
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Category</p>
+                    <p className="font-semibold text-[#2f2a29]">{user.skill}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Experience</p>
-                    <p className="text-slate-200 font-semibold">{user.experience || 0} years</p>
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Experience</p>
+                    <p className="font-semibold text-[#2f2a29]">{user.experience || 0} years</p>
                   </div>
                   <div>
-                      <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Status</p>
-                    <p className={`font-semibold ${user.availability ? 'text-emerald-400' : 'text-slate-400'}`}>
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Status</p>
+                    <p className={`font-semibold ${user.availability ? 'text-[#2f6a44]' : 'text-[#655d5a]'}`}>
                       {user.availability ? '🟢 Available' : '🔴 Unavailable'}
                     </p>
                   </div>
@@ -455,143 +444,133 @@ export default function ProviderDashboard() {
 
         {activeTab === 'requests' && (
           <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-slate-100 border-b border-slate-800 pb-4">Bookings</h2>
-            
+            <h2 className="border-b border-[#eadcc7] pb-4 text-2xl font-black tracking-[-0.05em] text-[#201a17]">Bookings</h2>
+
             {loading ? (
               <div className="py-20 text-center">
-                <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-slate-400 mt-4">Loading service requests...</p>
+                <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-[#d77a4a] border-t-transparent" />
+                <p className="mt-4 text-[#655d5a]">Loading service requests...</p>
               </div>
             ) : bookings.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {bookings.map((booking) => (
-                  <div
-                    key={booking._id || booking.bookingId}
-                    className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 space-y-4 hover:border-slate-700 transition-all"
-                  >
-                    {/* Booking Header */}
-                    <div className="flex items-start justify-between">
+                  <div key={booking._id || booking.bookingId} className="space-y-4 rounded-[24px] border border-[#eadcc7] bg-[#fffdfb] p-6 shadow-[0_14px_32px_rgba(70,42,28,0.03)]">
+                    <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-lg font-bold text-slate-100">{booking.serviceName}</h3>
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                              booking.status === 'Completed'
-                                ? 'bg-emerald-500/15 text-emerald-400'
-                                : booking.status === 'In Progress'
-                                ? 'bg-cyan-500/15 text-cyan-400'
-                                : booking.status === 'Cancelled'
-                                ? 'bg-rose-500/15 text-rose-400'
-                                : 'bg-amber-500/15 text-amber-400'
-                            }`}
-                          >
+                        <div className="mb-2 flex items-center gap-2">
+                          <h3 className="text-lg font-black tracking-[-0.04em] text-[#201a17]">{booking.serviceName}</h3>
+                          <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
+                            booking.status === 'Completed'
+                              ? 'bg-[#edf6ee] text-[#2f6a44]'
+                              : booking.status === 'In Progress'
+                              ? 'bg-[#edf6ff] text-[#3d77a6]'
+                              : booking.status === 'Cancelled'
+                              ? 'bg-[#f9ece9] text-[#8a4d2b]'
+                              : 'bg-[#fff0d8] text-[#b5721d]'
+                          }`}>
                             {booking.status}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-400">{booking.category}</p>
+                        <p className="text-sm text-[#655d5a]">{booking.category}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-slate-400 mb-1">Offered Price</p>
-                        <p className="text-xl font-bold text-emerald-400">Rs. {booking.price}</p>
+                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Offered price</p>
+                        <p className="text-xl font-black tracking-[-0.05em] text-[#8e4d2f]">Rs. {booking.price}</p>
                       </div>
                     </div>
 
-                    {/* Booking Details */}
-                    <div className="pt-4 border-t border-slate-800 space-y-3">
-                      <div className="flex items-center gap-3 text-sm">
-                        <Calendar className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span className="text-slate-300">{booking.date}</span>
-                        <Clock className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span className="text-slate-300">{booking.time}</span>
+                    <div className="space-y-3 border-t border-[#efe6dc] pt-4">
+                      <div className="flex items-center gap-3 text-sm text-[#3e3835]">
+                        <Calendar className="h-4 w-4 text-[#8e4d2f]" />
+                        <span>{booking.date}</span>
+                        <Clock className="h-4 w-4 text-[#8e4d2f]" />
+                        <span>{booking.time}</span>
                       </div>
 
-                      <div className="flex items-start gap-3 text-sm">
-                        <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                        <span className="text-slate-300">{booking.address}</span>
+                      <div className="flex items-start gap-3 text-sm text-[#3e3835]">
+                        <MapPin className="mt-0.5 h-4 w-4 text-[#8e4d2f]" />
+                        <span>{booking.address}</span>
                       </div>
 
-                      <div className="flex items-center gap-3 text-sm">
-                        <User className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span className="text-slate-300 font-semibold">{booking.userName}</span>
-                        <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span className="text-slate-300">{booking.userEmail}</span>
+                      <div className="flex items-center gap-3 text-sm text-[#3e3835]">
+                        <User className="h-4 w-4 text-[#8e4d2f]" />
+                        <span className="font-semibold">{booking.userName}</span>
+                        <Phone className="h-4 w-4 text-[#8e4d2f]" />
+                        <span>{booking.userEmail}</span>
                       </div>
 
                       {booking.instructions && (
-                        <div className="p-3 bg-slate-900/50 rounded-lg border border-slate-800">
-                          <p className="text-xs text-slate-400 font-semibold mb-1">Special Instructions</p>
-                          <p className="text-sm text-slate-300">{booking.instructions}</p>
+                        <div className="rounded-2xl border border-[#f0e5d9] bg-[#f8f3ee] p-3">
+                          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Special instructions</p>
+                          <p className="text-sm text-[#3e3835]">{booking.instructions}</p>
                         </div>
                       )}
 
-                      <div className="pt-4 border-t border-slate-800 space-y-3">
-  <button
-    onClick={() => openChatForBooking(booking)}
-    className="w-full px-4 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:border-cyan-500/50 font-semibold transition-all"
-  >
-    <span className="inline-flex items-center gap-2">
-      <MessageSquare className="w-4 h-4" />
-      Open Chat
-      {unreadCounts[String(booking._id)] > 0 && (
-        <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-          {unreadCounts[String(booking._id)]}
-        </span>
-      )}
-    </span>
-  </button>
+                      <div className="space-y-3 border-t border-[#efe6dc] pt-4">
+                        <button
+                          onClick={() => openChatForBooking(booking)}
+                          className="flex w-full items-center justify-center gap-2 rounded-full border border-[#d8d2c7] bg-[#f5f1ee] px-4 py-2.5 text-sm font-semibold text-[#3e3835] transition-all hover:border-[#d0b093] hover:text-[#201a17]"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          Open chat
+                          {unreadCounts[String(booking._id)] > 0 && (
+                            <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#d77a4a] px-1.5 py-0.5 text-[10px] font-bold text-white">
+                              {unreadCounts[String(booking._id)]}
+                            </span>
+                          )}
+                        </button>
 
-  {booking.status === "Scheduled" && (
-    <div className="grid grid-cols-2 gap-2">
-      <button
-        onClick={() => updateBookingStatus(booking._id, "Completed")}
-        className="px-4 py-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-semibold transition-all"
-      >
-        ✓ Complete
-      </button>
+                        {booking.status === 'Scheduled' && (
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => updateBookingStatus(booking._id, 'Completed')}
+                              className="rounded-full border border-[#bfd6b4] bg-[#edf6ee] px-4 py-2 text-sm font-bold text-[#2f6a44] transition-all hover:bg-[#e3f0e7]"
+                            >
+                              ✓ Complete
+                            </button>
 
-      <button
-        onClick={() => updateBookingStatus(booking._id, "Cancelled")}
-        className="px-4 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-semibold transition-all"
-      >
-        ✕ Cancel
-      </button>
-    </div>
-  )}
+                            <button
+                              onClick={() => updateBookingStatus(booking._id, 'Cancelled')}
+                              className="rounded-full border border-[#e9c1b7] bg-[#f9ece9] px-4 py-2 text-sm font-bold text-[#8a4d2b] transition-all hover:bg-[#f7e1d9]"
+                            >
+                              ✕ Cancel
+                            </button>
+                          </div>
+                        )}
 
-  {booking.status === "In Progress" && (
-    <button
-      onClick={() => updateBookingStatus(booking._id, "Completed")}
-      className="w-full px-4 py-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-semibold transition-all"
-    >
-      ✓ Mark as Completed
-    </button>
-  )}
-</div>
+                        {booking.status === 'In Progress' && (
+                          <button
+                            onClick={() => updateBookingStatus(booking._id, 'Completed')}
+                            className="w-full rounded-full border border-[#bfd6b4] bg-[#edf6ee] px-4 py-2 text-sm font-bold text-[#2f6a44] transition-all hover:bg-[#e3f0e7]"
+                          >
+                            ✓ Mark as completed
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="py-20 text-center border border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
-                <Calendar className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-slate-300 mb-2">No Bookings Yet</h3>
-                <p className="text-slate-400">You'll see all bookings assigned to this provider here</p>
+              <div className="rounded-[24px] border border-dashed border-[#d7cab9] bg-[#fffaf5] py-20 text-center">
+                <Calendar className="mx-auto mb-4 h-12 w-12 text-[#b9a698]" />
+                <h3 className="mb-2 text-lg font-bold text-[#2f2a29]">No bookings yet</h3>
+                <p className="text-[#655d5a]">You’ll see all bookings assigned to this provider here.</p>
               </div>
             )}
           </div>
         )}
 
-        {/* Profile Tab */}
         {activeTab === 'profile' && (
-          <div className="max-w-2xl bg-slate-900/40 border border-slate-800/60 rounded-2xl p-8 space-y-6">
-            <div className="flex items-center justify-between gap-4 border-b border-slate-800 pb-4">
-              <h2 className="text-2xl font-bold text-slate-100">Provider Profile</h2>
+          <div className="max-w-2xl space-y-6 rounded-[24px] border border-[#eadcc7] bg-[#fffdfb] p-8 shadow-[0_14px_32px_rgba(70,42,28,0.03)]">
+            <div className="flex items-center justify-between gap-4 border-b border-[#efe6dc] pb-4">
+              <h2 className="text-2xl font-black tracking-[-0.05em] text-[#201a17]">Provider profile</h2>
               <button
                 onClick={() => setProfileEditMode((previous) => !previous)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-700 text-slate-300 hover:text-slate-100 hover:border-slate-600 transition-all"
+                className="inline-flex items-center gap-2 rounded-full border border-[#eadcc7] bg-[#fffaf5] px-4 py-2 text-sm font-semibold text-[#5b4d49] transition-all hover:text-[#201a17]"
               >
-                <Edit2 className="w-4 h-4" />
-                {profileEditMode ? 'View Profile' : 'Edit Profile'}
+                <Edit2 className="h-4 w-4" />
+                {profileEditMode ? 'View profile' : 'Edit profile'}
               </button>
             </div>
 
@@ -602,66 +581,71 @@ export default function ProviderDashboard() {
                     src={avatarPreview}
                     alt={`${profileForm.firstName || 'Provider'} avatar preview`}
                     fallback={profileForm.firstName?.[0] || 'P'}
-                    className="w-24 h-24 rounded-2xl"
+                    className="h-24 w-24 rounded-[20px] border border-[#eadcc7] bg-[#f7efe8]"
                   />
-                  <div className="space-y-1.5 flex-1">
-                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Avatar Image</label>
+                  <div className="flex-1 space-y-1.5">
+                    <label className="pl-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Avatar image</label>
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleAvatarChange}
-                      className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm text-slate-100 file:bg-emerald-500/10 file:border-0 file:text-emerald-400 file:font-semibold file:cursor-pointer"
+                      className="w-full rounded-full border border-[#eadcc7] bg-[#fffaf5] px-4 py-3 text-sm text-[#201a17] file:mr-3 file:rounded-full file:border-0 file:bg-[#edf6ee] file:px-3 file:py-1.5 file:font-semibold file:text-[#2f6a44]"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">First Name</label><input name="firstName" value={profileForm.firstName} onChange={handleProfileFieldChange} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm text-slate-100" /></div>
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Last Name</label><input name="lastName" value={profileForm.lastName} onChange={handleProfileFieldChange} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm text-slate-100" /></div>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div className="space-y-1.5"><label className="pl-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">First name</label><input name="firstName" value={profileForm.firstName} onChange={handleProfileFieldChange} className="w-full rounded-full border border-[#eadcc7] bg-[#fffaf5] px-4 py-3 text-sm text-[#201a17] outline-none ring-0 transition focus:border-[#d38b66]" /></div>
+                  <div className="space-y-1.5"><label className="pl-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Last name</label><input name="lastName" value={profileForm.lastName} onChange={handleProfileFieldChange} className="w-full rounded-full border border-[#eadcc7] bg-[#fffaf5] px-4 py-3 text-sm text-[#201a17] outline-none ring-0 transition focus:border-[#d38b66]" /></div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Email</label><input name="email" type="email" value={profileForm.email} onChange={handleProfileFieldChange} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm text-slate-100" /></div>
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Phone</label><input name="phone" value={profileForm.phone} onChange={handleProfileFieldChange} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm text-slate-100" /></div>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div className="space-y-1.5"><label className="pl-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Email</label><input name="email" type="email" value={profileForm.email} onChange={handleProfileFieldChange} className="w-full rounded-full border border-[#eadcc7] bg-[#fffaf5] px-4 py-3 text-sm text-[#201a17] outline-none ring-0 transition focus:border-[#d38b66]" /></div>
+                  <div className="space-y-1.5"><label className="pl-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Phone</label><input name="phone" value={profileForm.phone} onChange={handleProfileFieldChange} className="w-full rounded-full border border-[#eadcc7] bg-[#fffaf5] px-4 py-3 text-sm text-[#201a17] outline-none ring-0 transition focus:border-[#d38b66]" /></div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Service Category</label><input name="skill" value={profileForm.skill} onChange={handleProfileFieldChange} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm text-slate-100" /></div>
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">Experience</label><input type="number" name="experience" value={profileForm.experience} onChange={handleProfileFieldChange} className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-2xl text-sm text-slate-100" /></div>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div className="space-y-1.5"><label className="pl-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Service category</label><input name="skill" value={profileForm.skill} onChange={handleProfileFieldChange} className="w-full rounded-full border border-[#eadcc7] bg-[#fffaf5] px-4 py-3 text-sm text-[#201a17] outline-none ring-0 transition focus:border-[#d38b66]" /></div>
+                  <div className="space-y-1.5"><label className="pl-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Experience</label><input type="number" name="experience" value={profileForm.experience} onChange={handleProfileFieldChange} className="w-full rounded-full border border-[#eadcc7] bg-[#fffaf5] px-4 py-3 text-sm text-[#201a17] outline-none ring-0 transition focus:border-[#d38b66]" /></div>
                 </div>
 
-                <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-900/50 border border-slate-800">
-                  <input type="checkbox" id="availability" name="availability" checked={profileForm.availability} onChange={handleProfileFieldChange} className="w-5 h-5 rounded-lg bg-slate-950 border border-slate-700 cursor-pointer accent-emerald-500" />
-                  <label htmlFor="availability" className="text-sm text-slate-300 cursor-pointer flex-1">I am available to accept service requests</label>
+                <div className="flex items-center gap-3 rounded-2xl border border-[#f0e5d9] bg-[#f8f3ee] p-4">
+                  <input type="checkbox" id="availability" name="availability" checked={profileForm.availability} onChange={handleProfileFieldChange} className="h-5 w-5 rounded-lg accent-[#2f6a44]" />
+                  <label htmlFor="availability" className="flex-1 cursor-pointer text-sm text-[#3e3835]">I am available to accept service requests</label>
                 </div>
 
                 <div className="flex gap-3">
-                  <button type="button" onClick={() => setProfileEditMode(false)} className="flex-1 px-6 py-3 rounded-xl border border-slate-700 text-slate-300 hover:text-slate-100 transition-all">Cancel</button>
-                  <button type="submit" disabled={savingProfile} className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold disabled:opacity-60">
-                    <Save className="w-4 h-4" />
-                    {savingProfile ? 'Saving...' : 'Save Profile'}
+                  <button type="button" onClick={() => setProfileEditMode(false)} className="flex-1 rounded-full border border-[#eadcc7] bg-[#fffaf5] px-6 py-3 font-semibold text-[#5b4d49] transition-all hover:text-[#201a17]">Cancel</button>
+                  <button type="submit" disabled={savingProfile} className="flex-1 rounded-full bg-gradient-to-r from-[#d77a4a] to-[#d9b46f] px-6 py-3 font-bold text-white shadow-[0_16px_26px_rgba(199,108,68,0.18)] transition-all disabled:opacity-60">
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <Save className="h-4 w-4" />
+                      {savingProfile ? 'Saving...' : 'Save profile'}
+                    </span>
                   </button>
                 </div>
               </form>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div><p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">First Name</p><p className="text-lg text-slate-200 font-semibold">{user.firstName}</p></div>
-                  <div><p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Last Name</p><p className="text-lg text-slate-200 font-semibold">{user.lastName}</p></div>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">First name</p><p className="text-lg font-semibold text-[#201a17]">{user.firstName}</p></div>
+                  <div><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Last name</p><p className="text-lg font-semibold text-[#201a17]">{user.lastName}</p></div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div><p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Email</p><div className="flex items-center gap-2"><Mail className="w-4 h-4 text-emerald-400" /><p className="text-slate-300">{user.email}</p></div></div>
-                  <div><p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Phone</p><div className="flex items-center gap-2"><Phone className="w-4 h-4 text-emerald-400" /><p className="text-slate-300">{user.phone || 'Not provided'}</p></div></div>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Email</p><div className="flex items-center gap-2"><Mail className="h-4 w-4 text-[#8e4d2f]" /><p className="text-[#3e3835]">{user.email}</p></div></div>
+                  <div><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Phone</p><div className="flex items-center gap-2"><Phone className="h-4 w-4 text-[#8e4d2f]" /><p className="text-[#3e3835]">{user.phone || 'Not provided'}</p></div></div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div><p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Service Category</p><div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-emerald-400" /><p className="text-slate-300">{user.skill || 'Not specified'}</p></div></div>
-                  <div><p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Experience</p><div className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /><p className="text-slate-300">{user.experience || 0} years</p></div></div>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Service category</p><div className="flex items-center gap-2"><Briefcase className="h-4 w-4 text-[#8e4d2f]" /><p className="text-[#3e3835]">{user.skill || 'Not specified'}</p></div></div>
+                  <div><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Experience</p><div className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-[#8e4d2f]" /><p className="text-[#3e3835]">{user.experience || 0} years</p></div></div>
                 </div>
 
-                <div className="pt-6 border-t border-slate-800">
-                  <button onClick={handleLogout} className="w-full px-6 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:border-rose-500/50 font-bold rounded-lg transition-all flex items-center justify-center gap-2"><LogOut className="w-5 h-5" />Logout</button>
+                <div className="border-t border-[#efe6dc] pt-6">
+                  <button onClick={handleLogout} className="flex w-full items-center justify-center gap-2 rounded-full border border-[#e9c1b7] bg-[#f9ece9] px-6 py-3 font-bold text-[#8a4d2b] transition-all hover:bg-[#f6e0d9]">
+                    <LogOut className="h-5 w-5" />
+                    Logout
+                  </button>
                 </div>
               </>
             )}
@@ -678,3 +662,4 @@ export default function ProviderDashboard() {
     </div>
   );
 }
+

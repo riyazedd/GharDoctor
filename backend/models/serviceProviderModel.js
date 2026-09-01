@@ -50,6 +50,15 @@ const serviceProviderSchema = new mongoose.Schema(
       required: true,
     },
 
+    citizenshipNumber: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      uppercase: true,
+      set: (value) => String(value).replace(/[^a-zA-Z0-9]/g, ''),
+    },
+
     avatar: {
       type: String,
       default: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300",

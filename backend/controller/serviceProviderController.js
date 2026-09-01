@@ -4,6 +4,10 @@ import generateToken from "../utils/generateToken.js";
 import { parseBooleanField, parseNumberField, resolveUploadedImage } from '../utils/uploadUtils.js';
 import { verifyCitizenshipImage, resolveUploadedFilePath } from '../utils/ocrService.js';
 
+const normalizeCitizenshipNumber = (value) => String(value || '')
+  .replace(/[^a-zA-Z0-9]/g, '')
+  .toUpperCase();
+
 // @desc    Get all service providers
 // @route   GET /api/service-providers
 // @access  Public
@@ -46,12 +50,12 @@ export const getProvidersByCategory = asyncHandler(async (req, res) => {
 // @route   POST /api/service-providers
 // @access  Private/Admin
 export const createServiceProvider = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password, phone, skill, experience } = req.body;
+  const { firstName, lastName, email, password, phone, skill, experience, citizenshipNumber } = req.body;
   const citizenshipImage = resolveUploadedImage(req, 'citizenshipImage');
   const avatar = resolveUploadedImage(req, 'avatar');
 
-  if (!citizenshipImage) {
-    return res.status(400).json({ message: 'Citizenship image is required' });
+  if (!citizenshipImage || !citizenshipNumber?.trim()) {
+    return res.status(400).json({ message: 'Citizenship number and image are required' });
   }
   
   // Check if provider already exists
@@ -60,9 +64,16 @@ export const createServiceProvider = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'Email already registered' });
   }
 
-  // Run OCR on the uploaded citizenship image, matching against registered name
+  const existingCitizenship = await ServiceProvider.findOne({
+    citizenshipNumber: normalizeCitizenshipNumber(citizenshipNumber),
+  });
+  if (existingCitizenship) {
+    return res.status(400).json({ message: 'Citizenship number is already registered' });
+  }
+
+  // Run OCR on the uploaded citizenship image, matching name and citizenship number.
   const citizenshipFilePath = resolveUploadedFilePath(req.files, 'citizenshipImage');
-  const ocrResult = await verifyCitizenshipImage(citizenshipFilePath, { firstName, lastName });
+  const ocrResult = await verifyCitizenshipImage(citizenshipFilePath, { firstName, lastName, citizenshipNumber });
   console.log('[OCR] Admin create — verified:', ocrResult.verified, '| keyword:', ocrResult.keywordMatch, '| nameMatch:', ocrResult.nameMatch, '|', ocrResult.reason);
   
   const provider = new ServiceProvider({
@@ -74,6 +85,7 @@ export const createServiceProvider = asyncHandler(async (req, res) => {
     skill,
     experience: parseNumberField(experience),
     citizenshipImage,
+    citizenshipNumber: normalizeCitizenshipNumber(citizenshipNumber),
     ...(avatar ? { avatar } : {}),
     availability: true,
     isVerified: true, // Admin-created providers are trusted as verified
@@ -93,6 +105,7 @@ export const createServiceProvider = asyncHandler(async (req, res) => {
       experience: provider.experience,
       availability: provider.availability,
       citizenshipImage: provider.citizenshipImage,
+      citizenshipNumber: provider.citizenshipNumber,
       avatar: provider.avatar,
       isVerified: provider.isVerified,
     },
@@ -109,7 +122,7 @@ export const updateServiceProvider = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Service provider not found' });
   }
   
-  const { firstName, lastName, phone, skill, experience, availability } = req.body;
+  const { firstName, lastName, phone, skill, experience, availability, citizenshipNumber } = req.body;
   const citizenshipImage = resolveUploadedImage(req, 'citizenshipImage', provider.citizenshipImage);
   const avatar = resolveUploadedImage(req, 'avatar', provider.avatar);
   
@@ -120,6 +133,9 @@ export const updateServiceProvider = asyncHandler(async (req, res) => {
   provider.experience = experience !== undefined ? parseNumberField(experience, provider.experience) : provider.experience;
   provider.availability = availability !== undefined ? parseBooleanField(availability, provider.availability) : provider.availability;
   provider.citizenshipImage = citizenshipImage || provider.citizenshipImage;
+  provider.citizenshipNumber = citizenshipNumber?.trim()
+    ? normalizeCitizenshipNumber(citizenshipNumber)
+    : provider.citizenshipNumber;
   provider.avatar = avatar || provider.avatar;
   
   await provider.save();
@@ -136,6 +152,7 @@ export const updateServiceProvider = asyncHandler(async (req, res) => {
       experience: provider.experience,
       availability: provider.availability,
       citizenshipImage: provider.citizenshipImage,
+      citizenshipNumber: provider.citizenshipNumber,
       avatar: provider.avatar,
     },
   });
@@ -151,7 +168,7 @@ export const updateCurrentServiceProvider = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Service provider not found' });
   }
   
-  const { firstName, lastName, phone, skill, experience, availability } = req.body;
+  const { firstName, lastName, phone, skill, experience, availability, citizenshipNumber } = req.body;
   const citizenshipImage = resolveUploadedImage(req, 'citizenshipImage', provider.citizenshipImage);
   const avatar = resolveUploadedImage(req, 'avatar', provider.avatar);
   
@@ -162,6 +179,9 @@ export const updateCurrentServiceProvider = asyncHandler(async (req, res) => {
   provider.experience = experience !== undefined ? parseNumberField(experience, provider.experience) : provider.experience;
   provider.availability = availability !== undefined ? parseBooleanField(availability, provider.availability) : provider.availability;
   provider.citizenshipImage = citizenshipImage || provider.citizenshipImage;
+  provider.citizenshipNumber = citizenshipNumber?.trim()
+    ? normalizeCitizenshipNumber(citizenshipNumber)
+    : provider.citizenshipNumber;
   provider.avatar = avatar || provider.avatar;
   
   await provider.save();
@@ -178,6 +198,7 @@ export const updateCurrentServiceProvider = asyncHandler(async (req, res) => {
       experience: provider.experience,
       availability: provider.availability,
       citizenshipImage: provider.citizenshipImage,
+      citizenshipNumber: provider.citizenshipNumber,
       avatar: provider.avatar,
     },
   });
@@ -201,12 +222,12 @@ export const deleteServiceProvider = asyncHandler(async (req, res) => {
 // @access  Public
 export const registerServiceProvider = asyncHandler(async (req, res) => {
   try {
-    const { firstName, lastName, email, password, phone, skill, experience, availability } = req.body;
+    const { firstName, lastName, email, password, phone, skill, experience, availability, citizenshipNumber } = req.body;
     const citizenshipImage = resolveUploadedImage(req, 'citizenshipImage');
     const avatar = resolveUploadedImage(req, 'avatar');
 
     // Validate required fields
-    if (!firstName || !lastName || !email || !password || !phone || !skill || !citizenshipImage) {
+    if (!firstName || !lastName || !email || !password || !phone || !skill || !citizenshipNumber?.trim() || !citizenshipImage) {
       return res.status(400).json({ message: 'Please provide all required fields' });
     }
 
@@ -216,12 +237,19 @@ export const registerServiceProvider = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
+    const existingCitizenship = await ServiceProvider.findOne({
+      citizenshipNumber: normalizeCitizenshipNumber(citizenshipNumber),
+    });
+    if (existingCitizenship) {
+      return res.status(400).json({ message: 'Citizenship number is already registered' });
+    }
+
     // --- OCR Verification (Option B: soft-flag) ---
-    // Run OCR and compare both citizenship card keywords AND the registered name.
-    // If either check fails, the account is created but marked isVerified=false
+    // Run OCR and compare citizenship-card keywords, name, and citizenship number.
+    // If any check fails, the account is created but marked isVerified=false
     // so an admin can review it manually.
     const citizenshipFilePath = resolveUploadedFilePath(req.files, 'citizenshipImage');
-    const ocrResult = await verifyCitizenshipImage(citizenshipFilePath, { firstName, lastName });
+    const ocrResult = await verifyCitizenshipImage(citizenshipFilePath, { firstName, lastName, citizenshipNumber });
     const isVerified = ocrResult.verified;
     console.log(
       '[OCR] Self-register — verified:', isVerified,
@@ -239,6 +267,7 @@ export const registerServiceProvider = asyncHandler(async (req, res) => {
       skill,
       experience: parseNumberField(experience),
       citizenshipImage,
+      citizenshipNumber: normalizeCitizenshipNumber(citizenshipNumber),
       ...(avatar ? { avatar } : {}),
       availability: availability !== undefined ? parseBooleanField(availability, true) : true,
       isVerified,
@@ -252,7 +281,9 @@ export const registerServiceProvider = asyncHandler(async (req, res) => {
     // Build a human-friendly OCR message for the frontend
     let ocrMessage;
     if (isVerified) {
-      ocrMessage = 'Your citizenship card was verified successfully and your name matches the document.';
+      ocrMessage = 'Your citizenship card was verified successfully; your name and citizenship number match the document.';
+    } else if (!ocrResult.citizenshipNumberMatch) {
+      ocrMessage = 'Your citizenship number could not be confirmed on the uploaded card. Your account has been created and will be reviewed by an admin.';
     } else if (!ocrResult.keywordMatch) {
       ocrMessage = 'The uploaded image does not appear to be a Nepali Citizenship Certificate. Your account has been created and will be reviewed by an admin.';
     } else if (!ocrResult.nameMatch) {
@@ -274,6 +305,7 @@ export const registerServiceProvider = asyncHandler(async (req, res) => {
       reviews: provider.reviews,
       completedJobs: provider.completedJobs,
       citizenshipImage: provider.citizenshipImage,
+      citizenshipNumber: provider.citizenshipNumber,
       avatar: provider.avatar,
       isProvider: true,
       isVerified: provider.isVerified,
@@ -281,6 +313,7 @@ export const registerServiceProvider = asyncHandler(async (req, res) => {
         verified: isVerified,
         keywordMatch: ocrResult.keywordMatch,
         nameMatch: ocrResult.nameMatch,
+        citizenshipNumberMatch: ocrResult.citizenshipNumberMatch,
         message: ocrMessage,
       },
       token,
@@ -315,6 +348,7 @@ export const loginServiceProvider = asyncHandler(async (req, res) => {
       reviews: provider.reviews,
       completedJobs: provider.completedJobs,
       citizenshipImage: provider.citizenshipImage,
+      citizenshipNumber: provider.citizenshipNumber,
       avatar: provider.avatar,
       isServiceProvider: provider.isServiceProvider,
       isVerified: provider.isVerified,

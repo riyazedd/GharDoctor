@@ -6,37 +6,35 @@ export default function AdminHeader({ title, subtitle, user }) {
   const { toggleSidebar } = useAdminLayout();
 
   return (
-    <div className="bg-slate-900/50 border-b border-slate-800 p-3 md:p-4 lg:p-6 flex items-center justify-between sticky top-0 z-20">
-      {/* Menu toggle for mobile */}
+    <div className="sticky top-0 z-20 flex items-center justify-between border-b border-[#eadcc7] bg-[#fffdfb]/85 p-3 backdrop-blur-sm md:p-4 lg:p-6">
       <button
         onClick={toggleSidebar}
-        className="md:hidden text-slate-400 hover:text-slate-200 transition-colors mr-3"
+        className="mr-3 rounded-full border border-[#eadcc7] bg-[#fffaf5] p-2 text-[#5e4d48] transition-colors hover:text-[#201a17] md:hidden"
       >
-        <Menu className="w-6 h-6" />
+        <Menu className="h-5 w-5" />
       </button>
 
       <div className="flex-1">
-        <h2 className="text-xl md:text-2xl font-bold text-slate-100">{title}</h2>
+        <h2 className="text-xl font-black tracking-[-0.05em] text-[#201a17] md:text-2xl">{title}</h2>
         {subtitle && (
-          <p className="text-slate-400 text-xs md:text-sm mt-0.5 md:mt-1">{subtitle}</p>
+          <p className="mt-0.5 text-xs text-[#655d5a] md:mt-1 md:text-sm">{subtitle}</p>
         )}
       </div>
 
-      <div className="flex items-center gap-2 md:gap-4 ml-2">
-        {/* User info - hidden on mobile */}
+      <div className="ml-2 flex items-center gap-2 md:gap-4">
         {user && (
           <>
-            <div className="hidden md:block text-right">
-              <p className="text-sm font-medium text-slate-100">
+            <div className="hidden text-right md:block">
+              <p className="text-sm font-semibold text-[#201a17]">
                 {user.firstName} {user.lastName}
               </p>
-              <p className="text-xs text-slate-500">{user.email}</p>
+              <p className="text-xs text-[#776b66]">{user.email}</p>
             </div>
             <ImageWithFallback
               src={user.profileImg}
               alt={`${user.firstName || 'User'} profile`}
               fallback={user.firstName?.charAt(0) || 'U'}
-              className="w-8 md:w-10 h-8 md:h-10 rounded-full"
+              className="h-8 w-8 rounded-full border border-[#eadcc7] bg-[#f7efe8] md:h-10 md:w-10"
             />
           </>
         )}

@@ -2,65 +2,65 @@ import { Star, Clock, ShieldCheck } from 'lucide-react';
 
 export default function FeaturedServiceCard({ service, onBookNow }) {
   return (
-    <div className="group flex flex-col overflow-hidden rounded-3xl bg-slate-900/40 border border-slate-900 hover:border-slate-800/80 shadow-xl transition-all duration-300">
-      {/* Image banner */}
-      <div className="relative h-56 overflow-hidden">
+    <article className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-[#e8d9ca] bg-[#fffdf9]/90 transition-colors duration-200 hover:border-[#d7a37a]">
+      <div className="relative h-52 overflow-hidden">
         <img
           src={service.image}
           alt={service.serviceName}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/20 to-transparent" />
-        <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-slate-955/80 backdrop-blur-md border border-slate-800/60 text-xs font-semibold text-cyan-400">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1d1714]/50 via-transparent to-transparent" />
+        <span className="absolute left-4 top-4 rounded-full border border-white/30 bg-[#fffaf5]/80 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#533b33] backdrop-blur-sm">
           {service.category}
-        </div>
+        </span>
       </div>
 
-      {/* Body */}
-      <div className="p-6 grow flex flex-col justify-between space-y-4">
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-slate-200 text-lg group-hover:text-cyan-400 transition-colors">
+      <div className="flex flex-1 flex-col justify-between gap-4 p-5">
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="text-lg font-black tracking-[-0.04em] text-[#201a17]">
               {service.serviceName}
             </h3>
-            <div className="flex items-center gap-1 text-amber-400 text-sm font-semibold">
-              <Star className="w-4 h-4 fill-amber-400 text-transparent" />
-              <span>{service.rating}</span>
+            <div className="flex items-center gap-1 rounded-full bg-[#f8efe3] px-2 py-1 text-xs font-semibold text-[#8a5e24]">
+              <Star className="h-3.5 w-3.5 fill-[#d9b46f] text-[#d9b46f]" />
+              {service.rating}
             </div>
           </div>
-          <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
+
+          <p className="text-sm leading-relaxed text-[#645b57]">
             {service.description}
           </p>
-          <div className="flex items-center gap-4 text-xs text-slate-500">
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-cyan-400" />
-              <span>{service.duration}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Service Warranty</span>
-            </div>
+
+          <div className="flex items-center gap-4 text-xs text-[#6d615d]">
+            <span className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 text-[#b86845]" />
+              {service.duration}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-[#7e8d68]" />
+              Warranty
+            </span>
           </div>
         </div>
 
-        <div className="pt-4 border-t border-slate-900 flex items-center justify-between">
+        <div className="flex items-center justify-between border-t border-[#ebdfd2] pt-4">
           <div>
-            <span className="text-[10px] text-slate-500 font-bold uppercase block tracking-wider">Starting from</span>
-            <span className="text-xl font-black text-cyan-400">Rs. {service.price}</span>
+            <span className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#7d6b63]">From</span>
+            <span className="text-xl font-black text-[#b86845]">Rs. {service.price}</span>
           </div>
           <button
             onClick={() => onBookNow(service)}
             disabled={!service.isAvailable}
-            className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer shadow-md ${
+            className={`rounded-full px-4 py-2.5 text-xs font-bold transition-all duration-200 ${
               service.isAvailable
-                ? "bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/5 active:scale-95"
-                : "bg-slate-800 text-slate-500 cursor-not-allowed shadow-none"
+                ? 'bg-[#1f1a17] text-white hover:bg-[#3d312d]'
+                : 'cursor-not-allowed bg-[#efe5dc] text-[#8b7d76]'
             }`}
           >
-            {service.isAvailable ? 'Book Now' : 'Sold Out'}
+            {service.isAvailable ? 'Book now' : 'Sold out'}
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

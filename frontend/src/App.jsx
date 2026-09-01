@@ -21,14 +21,13 @@ import Chatbot from './components/Chatbot'
 
 function AppContent() {
   const location = useLocation();
-  const currentView = location.pathname === '/' ? 'home' : location.pathname.slice(1);
   const hideNavbar = ['/login', '/register', '/provider-register','/admin', '/admin/dashboard', '/provider-dashboard', '/admin/users', '/admin/providers', '/admin/services', '/admin/categories'].includes(location.pathname);
   const hideFooter = ['/login', '/register', '/provider-register','/admin', '/admin/dashboard', '/provider-dashboard', '/admin/users', '/admin/providers', '/admin/services', '/admin/categories'].includes(location.pathname);
 
   return (
     <>
-      {!hideNavbar && <Navbar currentView={currentView} />}
-      <main className="min-h-screen bg-slate-950">
+      {!hideNavbar && <Navbar />}
+      <main className="min-h-screen bg-transparent">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/services" element={<Services />} />

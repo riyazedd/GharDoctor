@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   User, Calendar, Clock, MapPin, Phone, Mail,
-  CheckCircle, AlertCircle, Trash2, LogOut, Home
+  CheckCircle, AlertCircle, Trash2, LogOut, Home,
+  ArrowRight
 } from 'lucide-react';
 import { authAPI, bookingAPI } from '../API';
 import ImageWithFallback from '../components/ImageWithFallback';
@@ -10,7 +11,6 @@ import ImageWithFallback from '../components/ImageWithFallback';
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  // Get user from localStorage
   const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
@@ -21,14 +21,12 @@ export default function Dashboard() {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
 
-  // Check authentication on mount
   useEffect(() => {
     if (!token || !user) {
       navigate('/login');
       return;
     }
 
-    // Load bookings from API
     const fetchBookings = async () => {
       try {
         const response = await bookingAPI.getUserBookings(user._id);
@@ -44,7 +42,6 @@ export default function Dashboard() {
     fetchBookings();
   }, [token, user, navigate]);
 
-
   const cancelBooking = async (bookingId) => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) {
       return;
@@ -52,7 +49,7 @@ export default function Dashboard() {
 
     try {
       await bookingAPI.cancelBooking(bookingId);
-      const updatedBookings = bookings.map(booking =>
+      const updatedBookings = bookings.map((booking) =>
         booking._id === bookingId ? { ...booking, status: 'Cancelled' } : booking
       );
       setBookings(updatedBookings);
@@ -65,7 +62,7 @@ export default function Dashboard() {
     }
   };
 
-    const handleLogout = async () => {
+  const handleLogout = async () => {
     if (window.confirm('Are you sure you want to logout?')) {
       try {
         await authAPI.logout();
@@ -78,22 +75,19 @@ export default function Dashboard() {
     }
   };
 
-
-
-
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
-        <div className="text-center space-y-6">
-          <AlertCircle className="w-12 h-12 text-slate-500 mx-auto" />
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f1ea] px-4">
+        <div className="space-y-6 text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-[#7d6a62]" />
           <div>
-            <h2 className="text-2xl font-bold text-slate-200 mb-2">Not Logged In</h2>
-            <p className="text-slate-400 mb-6">Please sign in to view your dashboard.</p>
+            <h2 className="mb-2 text-2xl font-black tracking-[-0.05em] text-[#201a17]">Not logged in</h2>
+            <p className="mb-6 text-[#655d5a]">Please sign in to view your dashboard.</p>
             <button
               onClick={() => navigate('/login')}
-              className="px-6 py-3 bg-linear-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold rounded-xl transition-all"
+              className="rounded-full bg-[#d77a4a] px-6 py-3 text-sm font-bold text-white"
             >
-              Sign In
+              Sign in
             </button>
           </div>
         </div>
@@ -102,231 +96,277 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 pt-8 pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        {/* Header */}
-        <div className="bg-slate-900/40 border border-slate-800/60 rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4 flex-1">
-            <ImageWithFallback
-              src={user.profileImg}
-              alt={`${user.firstName || 'User'} profile`}
-              fallback={user.firstName?.[0] || 'U'}
-              className="w-16 h-16 rounded-2xl shadow-lg"
-            />
-            <div>
-              <h1 className="text-3xl font-extrabold text-slate-100">
-                Welcome, {user.firstName}!
-              </h1>
-              <p className="text-sm text-slate-400 mt-1">{user.email}</p>
+    <div className="min-h-screen bg-[#f7f1ea] pb-16 pt-8">
+      <div className="mx-auto max-w-6xl space-y-8 px-4 sm:px-6 lg:px-8">
+        <header className="border-b border-[#f0e5d9] py-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-4">
+              <ImageWithFallback
+                src={user.profileImg}
+                alt={`${user.firstName || 'User'} profile`}
+                fallback={user.firstName?.[0] || 'U'}
+                className="h-14 w-14 rounded-[16px] object-cover"
+              />
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8a5a3c]">Dashboard</p>
+                <h1 className="mt-2 text-3xl font-black tracking-[-0.05em] text-[#201a17]">
+                  Welcome back, {user.firstName}!
+                </h1>
+              </div>
+            </div>
+
+            <div className="flex w-full gap-3 lg:w-auto">
+              <button
+                onClick={() => navigate('/services')}
+                className="flex-1 rounded-full bg-[#d77a4a] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#c96838] lg:flex-none"
+              >
+                Book service
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center justify-center gap-2 rounded-full border border-[#d4c4b6] bg-[#fffdfb] px-5 py-2.5 text-sm font-bold text-[#4e4643] hover:border-[#c9b3a0] lg:flex-none"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
             </div>
           </div>
+        </header>
 
-          <div className="flex gap-3 w-full md:w-auto">
-            <button
-              onClick={() => navigate('/services')}
-              className="flex-1 md:flex-none px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all"
-            >
-              Book Service
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex-1 md:flex-none px-5 py-2.5 border border-slate-700 hover:border-slate-600 text-slate-300 hover:text-slate-100 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </button>
-          </div>
-        </div>
-
-        {/* Notifications */}
         {success && (
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-            <CheckCircle className="w-5 h-5 shrink-0" />
-            <p className="text-sm font-semibold">{success}</p>
+          <div className="flex items-center gap-3 rounded-[22px] border border-[#b9d4b0] bg-[#edf6ee] p-4 text-sm font-semibold text-[#2b5d3f]">
+            <CheckCircle className="h-5 w-5 shrink-0" />
+            <p>{success}</p>
           </div>
         )}
 
         {error && (
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400">
-            <AlertCircle className="w-5 h-5 shrink-0" />
-            <p className="text-sm font-semibold">{error}</p>
+          <div className="flex items-center gap-3 rounded-[22px] border border-[#e6b7ad] bg-[#f9ece9] p-4 text-sm font-semibold text-[#8a4d2b]">
+            <AlertCircle className="h-5 w-5 shrink-0" />
+            <p>{error}</p>
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="flex border-b border-slate-800 pb-2 gap-2">
+        <div className="flex gap-2 border-b border-[#eadcc7] pb-2">
           <button
             onClick={() => setActiveTab('bookings')}
-            className={`px-5 py-2.5 rounded-lg font-semibold transition-all ${
-              activeTab === 'bookings'
-                ? 'bg-cyan-500/15 text-cyan-400 border-b-2 border-cyan-400'
-                : 'text-slate-400 hover:text-slate-200'
+            className={`rounded-full px-4 py-2 text-sm font-semibold ${
+              activeTab === 'bookings' ? 'bg-[#f5e9df] text-[#8e4d2f]' : 'text-[#655d5a]'
             }`}
           >
-            My Bookings ({bookings.length})
+            My bookings ({bookings.length})
           </button>
           <button
             onClick={() => setActiveTab('profile')}
-            className={`px-5 py-2.5 rounded-lg font-semibold transition-all ${
-              activeTab === 'profile'
-                ? 'bg-cyan-500/15 text-cyan-400 border-b-2 border-cyan-400'
-                : 'text-slate-400 hover:text-slate-200'
+            className={`rounded-full px-4 py-2 text-sm font-semibold ${
+              activeTab === 'profile' ? 'bg-[#f5e9df] text-[#8e4d2f]' : 'text-[#655d5a]'
             }`}
           >
             Profile
           </button>
         </div>
 
-        {/* Bookings Tab */}
         {activeTab === 'bookings' && (
-          <div className="space-y-6">
-            {loadingBookings ? (
-              <div className="py-20 text-center">
-                <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-slate-400 mt-4">Loading your bookings...</p>
-              </div>
-            ) : bookings.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {bookings.map((booking) => (
-                  <div
-                    key={booking._id}
-                    className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 space-y-4 hover:border-slate-700 transition-all"
-                  >
-                    {/* Booking Header */}
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-lg font-bold text-slate-100">{booking.serviceName}</h3>
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+          <div className="grid gap-8 lg:grid-cols-[1.35fr_0.75fr]">
+            <section className="space-y-5">
+              {loadingBookings ? (
+                <div className="rounded-[28px] border border-[#eadcc7] bg-[#fffdfb]/80 p-12 text-center">
+                  <div className="mx-auto h-11 w-11 animate-spin rounded-full border-4 border-[#d58c63] border-t-transparent" />
+                  <p className="mt-4 text-sm text-[#655d5a]">Loading your bookings...</p>
+                </div>
+              ) : bookings.length > 0 ? (
+                bookings.map((booking) => (
+                  <div key={booking._id} className="border-b border-[#f0e5d9] py-6 sm:py-7">
+                    <div className="flex flex-col gap-4 border-b border-[#efe0d0] pb-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a5a3c]">Service</p>
+                        <h3 className="mt-2 text-xl font-black tracking-[-0.04em] text-[#201a17]">{booking.serviceName}</h3>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-start">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${
                             booking.status === 'Scheduled'
-                              ? 'bg-cyan-500/15 text-cyan-400'
+                              ? 'bg-[#edf4ee] text-[#3d6a4b]'
                               : booking.status === 'Completed'
-                                ? 'bg-emerald-500/15 text-emerald-400'
-                                : 'bg-slate-700/50 text-slate-400'
-                          }`}>
-                            {booking.status}
-                          </span>
-                        </div>
-                        <p className="text-sm text-slate-400">{booking.category}</p>
-                        <p className="text-xs text-slate-500 mt-1">ID: {booking.bookingId}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-slate-400 mb-1">Total Cost</p>
-                        <p className="text-2xl font-bold text-cyan-400">Rs. {booking.price}</p>
+                              ? 'bg-[#f4efe4] text-[#8e6d2c]'
+                              : 'bg-[#f1ece8] text-[#7c6b63]'
+                          }`}
+                        >
+                          {booking.status}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Booking Details */}
-                    <div className="pt-4 border-t border-slate-800 space-y-3">
-                      <div className="flex items-center gap-3 text-sm">
-                        <Calendar className="w-4 h-4 text-cyan-400 shrink-0" />
-                        <span className="text-slate-300">{booking.date}</span>
-                        <Clock className="w-4 h-4 text-cyan-400 shrink-0" />
-                        <span className="text-slate-300">{booking.time}</span>
-                      </div>
-
-                      <div className="flex items-start gap-3 text-sm">
-                        <MapPin className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                        <span className="text-slate-300">{booking.address}</span>
-                      </div>
-
-                      <div className="flex items-center gap-3 text-sm">
-                        <User className="w-4 h-4 text-cyan-400 shrink-0" />
-                        <span className="text-slate-300 font-semibold">{booking.providerName}</span>
-                        <Phone className="w-4 h-4 text-cyan-400 shrink-0" />
-                        <span className="text-slate-300">{booking.providerPhone}</span>
-                      </div>
-
-                      {booking.instructions && (
-                        <div className="p-3 bg-slate-900/50 rounded-lg border border-slate-800">
-                          <p className="text-xs text-slate-400 font-semibold mb-1">Special Instructions</p>
-                          <p className="text-sm text-slate-300">{booking.instructions}</p>
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Date & time</p>
+                          <div className="mt-1 flex items-center gap-2 text-sm text-[#4c4441]">
+                            <Calendar className="h-4 w-4 text-[#b86845]" />
+                            <span>{booking.date}</span>
+                          </div>
+                          <div className="mt-1 flex items-center gap-2 text-sm text-[#4c4441]">
+                            <Clock className="h-4 w-4 text-[#b86845]" />
+                            <span>{booking.time}</span>
+                          </div>
                         </div>
-                      )}
+
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Location</p>
+                          <div className="mt-1 flex items-start gap-2 text-sm text-[#4c4441]">
+                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#b86845]" />
+                            <span>{booking.address}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Professional</p>
+                          <div className="mt-1 flex items-center gap-2 text-sm text-[#4c4441]">
+                            <User className="h-4 w-4 text-[#b86845]" />
+                            <span>{booking.providerName}</span>
+                          </div>
+                          <div className="mt-1 flex items-center gap-2 text-sm text-[#4c4441]">
+                            <Phone className="h-4 w-4 text-[#b86845]" />
+                            <span>{booking.providerPhone}</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Price</p>
+                          <p className="mt-1 text-2xl font-black tracking-[-0.05em] text-[#b86845]">Rs. {booking.price}</p>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Actions */}
+                    {booking.instructions && (
+                      <div className="mt-4 rounded-[18px] border border-[#efe0d0] bg-[#faf5f0] p-3 text-sm text-[#4c4441]">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Instructions</p>
+                        <p className="mt-2">{booking.instructions}</p>
+                      </div>
+                    )}
+
                     {booking.status === 'Scheduled' && (
-                      <div className="pt-4 border-t border-slate-800 flex gap-2">
+                      <div className="mt-5 flex justify-end">
                         <button
                           onClick={() => cancelBooking(booking._id)}
-                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:border-rose-500/50 font-semibold transition-all"
+                          className="flex items-center gap-2 rounded-full border border-[#e2c4b6] bg-[#fff5f1] px-4 py-2 text-sm font-bold text-[#8a4d2b]"
                         >
-                          <Trash2 className="w-4 h-4" />
-                          Cancel Booking
+                          <Trash2 className="h-4 w-4" />
+                          Cancel booking
                         </button>
                       </div>
                     )}
                   </div>
-                ))}
+                ))
+              ) : (
+                <div className="rounded-[28px] border border-dashed border-[#e2c8b2] bg-[#fffdfb]/80 p-12 text-center">
+                  <Home className="mx-auto mb-4 h-12 w-12 text-[#7d6a62]" />
+                  <h3 className="text-xl font-black tracking-[-0.04em] text-[#201a17]">No bookings yet</h3>
+                  <p className="mt-2 text-sm text-[#655d5a]">You haven’t scheduled any services yet.</p>
+                  <button
+                    onClick={() => navigate('/services')}
+                    className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#d77a4a] px-5 py-2.5 text-sm font-bold text-white"
+                  >
+                    Browse services
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </section>
+
+            <aside className="space-y-6">
+              <div className="rounded-[28px] border border-[#eadcc7] bg-[#fffdfb]/80 p-5 sm:p-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Account</p>
+                <h2 className="mt-2 text-xl font-black tracking-[-0.04em] text-[#201a17]">Overview</h2>
+
+                <div className="mt-5 space-y-4">
+                  <div className="border-b border-[#efe0d0] pb-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Name</p>
+                    <p className="mt-1 text-base font-bold text-[#201a17]">{user.firstName} {user.lastName}</p>
+                  </div>
+                  <div className="border-b border-[#efe0d0] pb-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Email</p>
+                    <div className="mt-1 flex items-center gap-2 text-sm text-[#4c4441]">
+                      <Mail className="h-4 w-4 text-[#b86845]" />
+                      <span>{user.email}</span>
+                    </div>
+                  </div>
+                  <div className="border-b border-[#efe0d0] pb-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Phone</p>
+                    <div className="mt-1 flex items-center gap-2 text-sm text-[#4c4441]">
+                      <Phone className="h-4 w-4 text-[#b86845]" />
+                      <span>{user.phone || 'Not provided'}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Address</p>
+                    <div className="mt-1 flex items-start gap-2 text-sm text-[#4c4441]">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#b86845]" />
+                      <span>{user.address || 'Not provided'}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="py-20 text-center border border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
-                <Home className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-slate-300 mb-2">No Bookings Yet</h3>
-                <p className="text-slate-400 mb-6">You haven't scheduled any services yet.</p>
-                <button
-                  onClick={() => navigate('/services')}
-                  className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-lg transition-all"
-                >
-                  Browse Services
-                </button>
-              </div>
-            )}
+            </aside>
           </div>
         )}
 
-        {/* Profile Tab */}
         {activeTab === 'profile' && (
-          <div className="max-w-2xl bg-slate-900/40 border border-slate-800/60 rounded-2xl p-8 space-y-6">
-            <div className="border-b border-slate-800 pb-4">
-              <h2 className="text-2xl font-bold text-slate-100">Account Information</h2>
+          <div className="max-w-3xl rounded-[28px] border border-[#eadcc7] bg-[#fffdfb]/80 p-6 sm:p-8">
+            <div className="border-b border-[#efe0d0] pb-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a5a3c]">Profile</p>
+              <h2 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[#201a17]">Account information</h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">First Name</p>
-                <p className="text-lg text-slate-200 font-semibold">{user.firstName}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Last Name</p>
-                <p className="text-lg text-slate-200 font-semibold">{user.lastName}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Email</p>
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-cyan-400" />
-                  <p className="text-slate-300">{user.email}</p>
+            <div className="mt-6 space-y-5">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">First name</p>
+                  <p className="mt-1 text-lg font-bold text-[#201a17]">{user.firstName}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Last name</p>
+                  <p className="mt-1 text-lg font-bold text-[#201a17]">{user.lastName}</p>
                 </div>
               </div>
-              <div>
-                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Phone</p>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-cyan-400" />
-                  <p className="text-slate-300">{user.phone || 'Not provided'}</p>
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Email</p>
+                  <div className="mt-1 flex items-center gap-2 text-sm text-[#4c4441]">
+                    <Mail className="h-4 w-4 text-[#b86845]" />
+                    <span>{user.email}</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Phone</p>
+                  <div className="mt-1 flex items-center gap-2 text-sm text-[#4c4441]">
+                    <Phone className="h-4 w-4 text-[#b86845]" />
+                    <span>{user.phone || 'Not provided'}</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div>
-              <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Address</p>
-              <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-cyan-400 mt-1 shrink-0" />
-                <p className="text-slate-300">{user.address || 'Not provided'}</p>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7d6a62]">Address</p>
+                <div className="mt-1 flex items-start gap-2 text-sm text-[#4c4441]">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#b86845]" />
+                  <span>{user.address || 'Not provided'}</span>
+                </div>
               </div>
-            </div>
 
-            <div className="pt-6 border-t border-slate-800">
-              <button
-                onClick={handleLogout}
-                className="w-full px-6 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:border-rose-500/50 font-bold rounded-lg transition-all flex items-center justify-center gap-2"
-              >
-                <LogOut className="w-5 h-5" />
-                Logout
-              </button>
+              <div className="pt-6 border-t border-[#efe0d0]">
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center justify-center gap-2 rounded-full border border-[#e2c4b6] bg-[#fff5f1] px-6 py-3 text-sm font-bold text-[#8a4d2b]"
+                >
+                  <LogOut className="h-5 w-5" />
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         )}
