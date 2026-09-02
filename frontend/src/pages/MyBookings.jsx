@@ -5,6 +5,7 @@ import {
   CheckCircle, AlertCircle, Trash2, Home, ArrowRight, MessageSquare
 } from 'lucide-react';
 import { bookingAPI } from '../API';
+import { ToastMessages } from '../context/ToastContext';
 import ChatBox from '../components/ChatBox';
 import useBookingChatNotifications from '../hooks/useBookingChatNotifications';
 
@@ -120,6 +121,7 @@ export default function MyBookings() {
 
   return (
     <div className="min-h-screen bg-[#f7f1ea] pb-16 pt-8">
+      <ToastMessages error={error} success={success} />
       <div className="mx-auto max-w-6xl space-y-8 px-4 sm:px-6 lg:px-8">
         <header className="rounded-[30px] border border-[#eadcc7] bg-[#fffdfb]/80 p-6 shadow-[0_18px_38px_rgba(55,33,20,0.04)] sm:p-8">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">

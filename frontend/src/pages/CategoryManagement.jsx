@@ -4,8 +4,10 @@ import { categoryAPI } from '../API';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminHeader from '../components/AdminHeader';
 import { AdminLayoutProvider, useAdminLayout } from '../context/AdminLayoutContext';
+import { useToast } from '../context/ToastContext';
 
 function CategoryManagementContent() {
+  const toast = useToast();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,10 +18,12 @@ function CategoryManagementContent() {
   const [user, setUser] = useState(null);
   const [formData, setFormData] = useState({
     categoryName: '',
-    icon: '',
     description: '',
-    color: '',
   });
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error, toast]);
 
   useEffect(() => {
     fetchCategories();
@@ -49,8 +53,7 @@ function CategoryManagementContent() {
     const searchLower = searchTerm.toLowerCase();
     return (
       category.categoryName?.toLowerCase().includes(searchLower) ||
-      category.description?.toLowerCase().includes(searchLower) ||
-      category.icon?.toLowerCase().includes(searchLower)
+      category.description?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -58,9 +61,7 @@ function CategoryManagementContent() {
     setCurrentCategory(category);
     setFormData({
       categoryName: category.categoryName || '',
-      icon: category.icon || '',
       description: category.description || '',
-      color: category.color || '',
     });
     setModalMode('edit');
     setShowModal(true);
@@ -70,9 +71,7 @@ function CategoryManagementContent() {
     setCurrentCategory(null);
     setFormData({
       categoryName: '',
-      icon: '',
       description: '',
-      color: '',
     });
     setModalMode('add');
     setShowModal(true);
@@ -88,7 +87,7 @@ function CategoryManagementContent() {
 
   const handleSave = async () => {
     try {
-      if (!formData.categoryName || !formData.icon || !formData.description || !formData.color) {
+      if (!formData.categoryName || !formData.description) {
         setError('Please fill in all required fields');
         return;
       }
@@ -107,6 +106,7 @@ function CategoryManagementContent() {
 
       setShowModal(false);
       setError(null);
+      toast.success(`Category ${modalMode === 'edit' ? 'updated' : 'created'} successfully`);
     } catch (err) {
       console.error('Error saving category:', err);
       setError(err.response?.data?.message || 'Failed to save category');
@@ -119,6 +119,7 @@ function CategoryManagementContent() {
         await categoryAPI.deleteCategory(categoryId);
         setCategories(categories.filter((category) => category._id !== categoryId));
         setError(null);
+        toast.success('Category deleted successfully');
       } catch (err) {
         console.error('Error deleting category:', err);
         setError('Failed to delete category');
@@ -131,9 +132,7 @@ function CategoryManagementContent() {
     setCurrentCategory(null);
     setFormData({
       categoryName: '',
-      icon: '',
       description: '',
-      color: '',
     });
   };
 
@@ -148,19 +147,12 @@ function CategoryManagementContent() {
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
           <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto">
-            {/* Error Message */}
-            {error && (
-              <div className="mb-4 p-3 sm:p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-sm sm:text-base">
-                {error}
-              </div>
-            )}
-
             {/* Search Bar */}
             <div className="mb-4 sm:mb-6 relative">
               <Search className="absolute left-3 top-2.5 sm:top-3 text-slate-400 w-4 h-4 sm:w-5 sm:h-5" />
               <input
                 type="text"
-                placeholder="Search by category name, icon, or description..."
+                placeholder="Search by category name or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-100 placeholder-slate-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-cyan-500"
@@ -194,9 +186,7 @@ function CategoryManagementContent() {
                   <thead className="bg-slate-900/50 border-b border-slate-700/50">
                     <tr>
                       <th className="px-3 sm:px-6 py-2 sm:py-3 text-left font-semibold text-slate-300">Category Name</th>
-                      <th className="hidden sm:table-cell px-6 py-3 text-left font-semibold text-slate-300">Icon</th>
-                      <th className="hidden md:table-cell px-6 py-3 text-left font-semibold text-slate-300">Description</th>
-                      <th className="hidden lg:table-cell px-6 py-3 text-left font-semibold text-slate-300">Color</th>
+                      <th className="hidden sm:table-cell px-6 py-3 text-left font-semibold text-slate-300">Description</th>
                       <th className="px-3 sm:px-6 py-2 sm:py-3 text-center font-semibold text-slate-300">Actions</th>
                     </tr>
                   </thead>
@@ -207,11 +197,8 @@ function CategoryManagementContent() {
                           <div className="font-semibold text-slate-100 truncate">
                             {category.categoryName}
                           </div>
-                          <div className="text-xs text-slate-400 sm:hidden">{category.icon}</div>
                         </td>
-                        <td className="hidden sm:table-cell px-6 py-4 text-slate-100">{category.icon}</td>
-                        <td className="hidden md:table-cell px-6 py-4 text-slate-100 truncate">{category.description}</td>
-                        <td className="hidden lg:table-cell px-6 py-4 text-slate-100 text-xs">{category.color}</td>
+                        <td className="hidden sm:table-cell px-6 py-4 text-slate-100 truncate">{category.description}</td>
                         <td className="px-3 sm:px-6 py-2 sm:py-4 text-center">
                           <div className="flex items-center justify-center gap-2 sm:gap-3">
                             <button
@@ -243,7 +230,7 @@ function CategoryManagementContent() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 rounded-lg shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg max-h-[90vh] overflow-y-auto border border-slate-700/50">
+          <div className="admin-management-modal bg-white rounded-lg shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg max-h-[90vh] overflow-y-auto border border-slate-700/50">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-700/50">
               <h2 className="text-lg sm:text-xl font-bold text-slate-100">
@@ -275,20 +262,6 @@ function CategoryManagementContent() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Icon (Lucide React icon name) *
-                </label>
-                <input
-                  type="text"
-                  name="icon"
-                  value={formData.icon}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Sparkles, Droplet, Zap, Paintbrush"
-                  className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">
                   Description *
                 </label>
                 <textarea
@@ -301,22 +274,6 @@ function CategoryManagementContent() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Gradient Color (Tailwind classes) *
-                </label>
-                <input
-                  type="text"
-                  name="color"
-                  value={formData.color}
-                  onChange={handleInputChange}
-                  placeholder="e.g., from-cyan-500 to-blue-600"
-                  className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                />
-                <p className="text-xs text-slate-400 mt-2">
-                  Format: from-[color1]-[number] to-[color2]-[number]
-                </p>
-              </div>
             </div>
 
             {/* Modal Footer */}

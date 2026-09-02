@@ -4,8 +4,10 @@ import { serviceAPI } from '../API';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminHeader from '../components/AdminHeader';
 import { AdminLayoutProvider, useAdminLayout } from '../context/AdminLayoutContext';
+import { useToast } from '../context/ToastContext';
 
 function ServiceManagementContent() {
+  const toast = useToast();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,6 +26,10 @@ function ServiceManagementContent() {
     rating: 4.5,
     duration: '2-3 hours',
   });
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error, toast]);
 
   useEffect(() => {
     fetchServices();
@@ -130,6 +136,7 @@ function ServiceManagementContent() {
 
       setShowModal(false);
       setError(null);
+      toast.success(`Service ${modalMode === 'edit' ? 'updated' : 'created'} successfully`);
     } catch (err) {
       console.error('Error saving service:', err);
       setError(err.response?.data?.message || 'Failed to save service');
@@ -142,6 +149,7 @@ function ServiceManagementContent() {
         await serviceAPI.deleteService(serviceId);
         setServices(services.filter((service) => service._id !== serviceId));
         setError(null);
+        toast.success('Service deleted successfully');
       } catch (err) {
         console.error('Error deleting service:', err);
         setError('Failed to delete service');
@@ -175,13 +183,6 @@ function ServiceManagementContent() {
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
           <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto">
-            {/* Error Message */}
-            {error && (
-              <div className="mb-4 p-3 sm:p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-sm sm:text-base">
-                {error}
-              </div>
-            )}
-
             {/* Search Bar */}
             <div className="mb-4 sm:mb-6 relative">
               <Search className="absolute left-3 top-2.5 sm:top-3 text-slate-400 w-4 h-4 sm:w-5 sm:h-5" />
@@ -289,7 +290,7 @@ function ServiceManagementContent() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 rounded-lg shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg max-h-[90vh] overflow-y-auto border border-slate-700/50">
+          <div className="admin-management-modal bg-white rounded-lg shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg max-h-[90vh] overflow-y-auto border border-slate-700/50">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-700/50">
               <h2 className="text-lg sm:text-xl font-bold text-slate-100">

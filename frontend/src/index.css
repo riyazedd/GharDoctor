@@ -136,6 +136,17 @@ body::before {
   background: linear-gradient(180deg, var(--brand-deep), var(--sage));
 }
 
+/* Keep management dialogs opaque while retaining scroll support for long forms. */
+.admin-management-modal {
+  background-color: #fff !important;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.admin-management-modal::-webkit-scrollbar {
+  display: none;
+}
+
 body [class*="bg-slate-950"],
 body [class*="bg-slate-900"],
 body [class*="bg-slate-800"],

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Lock, Mail, User, Phone, MapPin, ArrowRight, ShieldCheck, AlertCircle, Upload } from 'lucide-react';
 import { authAPI } from '../API';
+import { ToastMessages } from '../context/ToastContext';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -109,6 +110,7 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-80px)] items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(201,109,66,0.16),_transparent_25%),linear-gradient(180deg,#f7f1ea_0%,#f5efe8_100%)] px-4 py-16">
+      <ToastMessages error={error} success={success} />
       <div className="w-full max-w-lg">
         <div className="rounded-[30px] border border-[#eadcc7] bg-[#fffdfb]/90 p-8 shadow-[0_16px_40px_rgba(61,38,26,0.08)] sm:p-10">
           <div className="mb-8 text-center">

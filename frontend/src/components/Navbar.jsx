@@ -111,12 +111,12 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 border-b border-[#e5d4c0] bg-[#fffaf5]/80 shadow-[0_8px_16px_rgba(70,42,28,0.04)] backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
-          <a href="/" className="flex cursor-pointer items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-[16px] border border-[#edd1b3] bg-gradient-to-br from-[#d77a4a] via-[#e4b56f] to-[#c8c98e] shadow-[0_12px_22px_rgba(199,108,68,0.18)]">
-              <img src="logo.png" alt="GharDoctor logo" className="h-8 w-8 object-contain" />
+          <a href="/" className="flex cursor-pointer items-center">
+            <div className="flex h-11 w-11 items-center justify-center">
+              <img src="logo-dark.png" alt="GharDoctor logo" className="h-9 w-9 object-contain" />
             </div>
             <div>
-              <span className="text-xl font-extrabold tracking-[-0.05em] text-[#201a17]">
+              <span className="text-xl font-extrabold tracking-tighter text-[#201a17]">
                 Ghar<span className="text-[#c96d42]">Doctor</span>
               </span>
               <p className="-mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7f6d66]">Home Services</p>
@@ -205,7 +205,7 @@ export default function Navbar() {
                 </a>
                 <a
                   href="/booking"
-                  className="cursor-pointer rounded-full bg-gradient-to-r from-[#d77a4a] to-[#d9b46f] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#d77a4a]/20 transition-all duration-200 hover:brightness-105 active:scale-95"
+                  className="cursor-pointer rounded-full bg-linear-to-r from-[#d77a4a] to-[#d9b46f] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#d77a4a]/20 transition-all duration-200 hover:brightness-105 active:scale-95"
                 >
                   Book Now
                 </a>
@@ -284,7 +284,7 @@ export default function Navbar() {
                   <a
                     href="/booking"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="cursor-pointer rounded-xl bg-gradient-to-r from-[#d77a4a] to-[#d9b46f] py-2.5 text-center text-sm font-bold text-white shadow-lg shadow-[#d77a4a]/20 transition-all duration-200 hover:brightness-105"
+                    className="cursor-pointer rounded-xl bg-liniear-to-r from-[#d77a4a] to-[#d9b46f] py-2.5 text-center text-sm font-bold text-white shadow-lg shadow-[#d77a4a]/20 transition-all duration-200 hover:brightness-105"
                   >
                     Book Now
                   </a>

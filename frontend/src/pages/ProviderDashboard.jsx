@@ -5,6 +5,7 @@ import {
   Calendar, Clock, MapPin, Phone, Mail, Activity, TrendingUp, Power, Edit2, Save
 } from 'lucide-react';
 import { authAPI, bookingAPI, providerAPI } from '../API';
+import { ToastMessages } from '../context/ToastContext';
 import ChatBox from '../components/ChatBox';
 import useBookingChatNotifications from '../hooks/useBookingChatNotifications';
 import ImageWithFallback from '../components/ImageWithFallback';
@@ -213,6 +214,7 @@ export default function ProviderDashboard() {
 
   return (
     <div className="min-h-screen bg-[#f7f1ea] pb-16 pt-8">
+      <ToastMessages error={error} success={success} />
       <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
         <div className="rounded-[30px] border border-[#eadcc7] bg-[#fffdfb] p-8 shadow-[0_16px_40px_rgba(61,38,26,0.06)]">
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">

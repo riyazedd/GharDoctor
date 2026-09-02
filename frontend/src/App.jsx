@@ -1,5 +1,5 @@
-import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { ToastProvider } from './context/ToastContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
@@ -56,7 +56,9 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <AppContent />
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </Router>
   )
 }

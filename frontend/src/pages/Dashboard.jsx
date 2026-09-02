@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { authAPI, bookingAPI } from '../API';
 import ImageWithFallback from '../components/ImageWithFallback';
+import { ToastMessages } from '../context/ToastContext';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -97,6 +98,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#f7f1ea] pb-16 pt-8">
+      <ToastMessages error={error} success={success} />
       <div className="mx-auto max-w-6xl space-y-8 px-4 sm:px-6 lg:px-8">
         <header className="border-b border-[#f0e5d9] py-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">

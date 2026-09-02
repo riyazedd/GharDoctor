@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { services } from '../services/mockData';
 import {
   Search,
   ArrowRight,
@@ -19,7 +18,6 @@ import {
   Star
 } from 'lucide-react';
 import CategoryCard from '../components/CategoryCard';
-import FeaturedServiceCard from '../components/FeaturedServiceCard';
 import QualityCard from '../components/QualityCard';
 import TestimonialCard from '../components/TestimonialCard';
 
@@ -73,7 +71,7 @@ export default function Home() {
     fetchCategories();
   }, []);
 
-  const featuredServices = services.slice(0, 3);
+
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();

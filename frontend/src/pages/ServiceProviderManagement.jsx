@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, X, Save, ShieldCheck, ShieldOff } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X, Save, ShieldCheck, ShieldOff, Eye, Maximize2 } from 'lucide-react';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminHeader from '../components/AdminHeader';
 import ImageWithFallback from '../components/ImageWithFallback';
 import { AdminLayoutProvider, useAdminLayout } from '../context/AdminLayoutContext';
+import { useToast } from '../context/ToastContext';
 import { providerAPI, userAPI } from '../API';
 
 const ServiceProviderManagementContent = () => {
+  const toast = useToast();
   const [providers, setProviders] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [detailsProvider, setDetailsProvider] = useState(null);
+  const [showCitizenshipFullscreen, setShowCitizenshipFullscreen] = useState(false);
   const [modalMode, setModalMode] = useState('add');
   const [currentProvider, setCurrentProvider] = useState(null);
   const [user, setUser] = useState(null);
@@ -29,6 +33,10 @@ const ServiceProviderManagementContent = () => {
     citizenshipImage: '',
     avatar: '',
   });
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error, toast]);
 
   // Fetch admin user info
   useEffect(() => {
@@ -174,6 +182,7 @@ const ServiceProviderManagementContent = () => {
 
       setShowModal(false);
       setError(null);
+      toast.success(`Provider ${modalMode === 'edit' ? 'updated' : 'created'} successfully`);
     } catch (err) {
       console.error('Error saving provider:', err);
       setError(err.response?.data?.message || 'Failed to save provider');
@@ -186,6 +195,7 @@ const ServiceProviderManagementContent = () => {
         await providerAPI.deleteProvider(providerId);
         setProviders(providers.filter((provider) => provider._id !== providerId));
         setError(null);
+        toast.success('Provider deleted successfully');
       } catch (err) {
         console.error('Error deleting provider:', err);
         setError('Failed to delete provider');
@@ -200,10 +210,24 @@ const ServiceProviderManagementContent = () => {
       setProviders(providers.map((p) =>
         p._id === providerId ? { ...p, isVerified: updated.isVerified } : p
       ));
+      setDetailsProvider((provider) =>
+        provider?._id === providerId ? { ...provider, isVerified: updated.isVerified } : provider
+      );
+      toast.success(updated.isVerified ? 'Provider verified successfully' : 'Provider verification revoked');
     } catch (err) {
       console.error('Error toggling verification:', err);
       setError('Failed to update verification status');
     }
+  };
+
+  const handleViewDetails = (provider) => {
+    setDetailsProvider(provider);
+    setShowCitizenshipFullscreen(false);
+  };
+
+  const handleCloseDetails = () => {
+    setDetailsProvider(null);
+    setShowCitizenshipFullscreen(false);
   };
 
   return (
@@ -213,13 +237,6 @@ const ServiceProviderManagementContent = () => {
         <AdminHeader title="Service Provider Management" subtitle="Manage all service providers" user={user} />
 
         <div className="p-3 sm:p-4 md:p-8">
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 p-3 sm:p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-sm sm:text-base">
-              {error}
-            </div>
-          )}
-
           {/* Search Bar */}
           <div className="mb-4 sm:mb-6 relative">
             <Search className="absolute left-3 top-2.5 sm:top-3 text-slate-400 w-4 h-4 sm:w-5 sm:h-5" />
@@ -323,20 +340,14 @@ const ServiceProviderManagementContent = () => {
                             : <><ShieldOff className="w-3 h-3" /> Pending</>}
                         </span>
                       </td>
-                      <td className="w-40 px-3 sm:px-6 py-2 sm:py-4 text-center">
+                      <td className="w-56 px-3 sm:px-6 py-2 sm:py-4 text-center">
                         <div className="flex items-center justify-center gap-2 sm:gap-3">
                           <button
-                            onClick={() => handleToggleVerify(provider._id)}
-                            className={`p-1.5 sm:p-2 rounded-lg transition ${
-                              provider.isVerified
-                                ? 'text-amber-400 hover:bg-amber-500/10'
-                                : 'text-emerald-400 hover:bg-emerald-500/10'
-                            }`}
-                            title={provider.isVerified ? 'Revoke verification' : 'Manually verify'}
+                            onClick={() => handleViewDetails(provider)}
+                            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-cyan-400 transition hover:bg-cyan-500/10"
+                            title="View provider details"
                           >
-                            {provider.isVerified
-                              ? <ShieldOff className="w-4 h-4" />
-                              : <ShieldCheck className="w-4 h-4" />}
+                            <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleEdit(provider)}
@@ -366,7 +377,7 @@ const ServiceProviderManagementContent = () => {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 rounded-lg shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg max-h-[90vh] overflow-y-auto border border-slate-700/50">
+          <div className="admin-management-modal bg-white rounded-lg shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg max-h-[90vh] overflow-y-auto border border-slate-700/50">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-700/50">
               <h2 className="text-lg sm:text-xl font-bold text-slate-100">
@@ -595,6 +606,93 @@ const ServiceProviderManagementContent = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Provider Details Modal */}
+      {detailsProvider && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div
+            className="admin-management-modal w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg border border-slate-700/50 bg-white shadow-lg"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="provider-details-title"
+          >
+            <div className="flex items-center justify-between border-b border-slate-700/50 p-4 sm:p-6">
+              <div>
+                <h2 id="provider-details-title" className="text-xl font-bold text-slate-100">Provider Details</h2>
+                <p className="mt-1 text-sm text-slate-400">Review the provider profile and citizenship document.</p>
+              </div>
+              <button onClick={handleCloseDetails} className="rounded-lg p-1 hover:bg-slate-700/50" aria-label="Close provider details">
+                <X className="h-5 w-5 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="space-y-6 p-4 sm:p-6">
+              <div className="flex items-center gap-4">
+                <ImageWithFallback
+                  src={detailsProvider.avatar}
+                  alt={`${detailsProvider.firstName} ${detailsProvider.lastName} avatar`}
+                  fallback={detailsProvider.firstName?.[0] || 'P'}
+                  className="h-16 w-16 shrink-0 rounded-full"
+                />
+                <div>
+                  <h3 className="text-lg font-bold text-slate-100">{detailsProvider.firstName} {detailsProvider.lastName}</h3>
+                  <p className="text-sm text-slate-400">{detailsProvider.email}</p>
+                </div>
+                <span className={`ml-auto inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${detailsProvider.isVerified ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                  {detailsProvider.isVerified ? <ShieldCheck className="h-3 w-3" /> : <ShieldOff className="h-3 w-3" />}
+                  {detailsProvider.isVerified ? 'Verified' : 'Pending review'}
+                </span>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Phone</p><p className="mt-1 text-slate-100">{detailsProvider.phone || 'Not provided'}</p></div>
+                <div><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Skill</p><p className="mt-1 text-slate-100">{detailsProvider.skill || 'Not provided'}</p></div>
+                <div><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Experience</p><p className="mt-1 text-slate-100">{detailsProvider.experience ?? 0} years</p></div>
+                <div><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Availability</p><p className="mt-1 text-slate-100">{detailsProvider.availability ? 'Available for bookings' : 'Unavailable'}</p></div>
+                <div><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Rating</p><p className="mt-1 text-slate-100">{detailsProvider.rating ?? 0} ({detailsProvider.reviews ?? 0} reviews)</p></div>
+                <div><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Completed jobs</p><p className="mt-1 text-slate-100">{detailsProvider.completedJobs ?? 0}</p></div>
+              </div>
+
+              <div className="rounded-lg border border-slate-700/50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Citizenship number</p>
+                <p className="mt-1 font-medium text-slate-100">{detailsProvider.citizenshipNumber || 'Not provided'}</p>
+              </div>
+
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-slate-100">Citizenship image</p>
+                  {detailsProvider.citizenshipImage && (
+                    <button onClick={() => setShowCitizenshipFullscreen(true)} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-cyan-400 hover:bg-cyan-500/10">
+                      <Maximize2 className="h-4 w-4" /> View fullscreen
+                    </button>
+                  )}
+                </div>
+                {detailsProvider.citizenshipImage ? (
+                  <button onClick={() => setShowCitizenshipFullscreen(true)} className="block w-full overflow-hidden rounded-lg border border-slate-700/50" aria-label="View citizenship image fullscreen">
+                    <img src={detailsProvider.citizenshipImage} alt={`${detailsProvider.firstName} ${detailsProvider.lastName} citizenship`} className="h-56 w-full object-contain bg-slate-100" />
+                  </button>
+                ) : <p className="rounded-lg border border-dashed border-slate-700/50 p-6 text-center text-sm text-slate-400">No citizenship image available.</p>}
+              </div>
+            </div>
+
+            <div className="flex flex-col-reverse gap-3 border-t border-slate-700/50 p-4 sm:flex-row sm:p-6">
+              <button onClick={handleCloseDetails} className="flex-1 rounded-lg border border-slate-600/50 px-4 py-2 text-slate-300 hover:bg-slate-700/50">Close</button>
+              <button onClick={() => handleToggleVerify(detailsProvider._id)} className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 font-medium text-white ${detailsProvider.isVerified ? 'bg-amber-600 hover:bg-amber-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                {detailsProvider.isVerified ? <ShieldOff className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+                {detailsProvider.isVerified ? 'Revoke Verification' : 'Verify Provider'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Citizenship Image Fullscreen Viewer */}
+      {detailsProvider && showCitizenshipFullscreen && detailsProvider.citizenshipImage && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/90 p-4" role="dialog" aria-modal="true" aria-label="Citizenship image fullscreen viewer">
+          <button onClick={() => setShowCitizenshipFullscreen(false)} className="absolute right-4 top-4 rounded-full bg-white/15 p-2 text-white hover:bg-white/25" aria-label="Close fullscreen image"><X className="h-6 w-6" /></button>
+          <img src={detailsProvider.citizenshipImage} alt={`${detailsProvider.firstName} ${detailsProvider.lastName} citizenship`} className="max-h-full max-w-full object-contain" />
         </div>
       )}
     </div>

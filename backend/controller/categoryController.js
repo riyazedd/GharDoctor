@@ -26,7 +26,7 @@ const getCategoryById = asyncHandler(async (req, res) => {
 // @route   POST /api/categories
 // @access  Private/Admin
 const createCategory = asyncHandler(async (req, res) => {
-  const { categoryName, icon, description, color } = req.body;
+  const { categoryName, description } = req.body;
 
   const categoryExists = await Category.findOne({ categoryName });
   
@@ -37,9 +37,7 @@ const createCategory = asyncHandler(async (req, res) => {
 
   const category = await Category.create({
     categoryName,
-    icon,
     description,
-    color
   });
 
   if (category) {
@@ -53,9 +51,10 @@ const createCategory = asyncHandler(async (req, res) => {
 // @route   PUT /api/categories/:id
 // @access  Private/Admin
 const updateCategory = asyncHandler(async (req, res) => {
+  const { categoryName, description } = req.body;
   const category = await Category.findByIdAndUpdate(
     req.params.id,
-    req.body,
+    { categoryName, description },
     { new: true, runValidators: true }
   );
 

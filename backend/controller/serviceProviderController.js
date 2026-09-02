@@ -41,6 +41,7 @@ export const getProvidersByCategory = asyncHandler(async (req, res) => {
   const providers = await ServiceProvider.find({
     skill: { $regex: new RegExp(`^${category}$`, 'i') },
     availability: true,
+    isVerified: true,
   }).select('-password');
   
   res.status(200).json(providers);
