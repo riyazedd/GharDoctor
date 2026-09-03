@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, LogOut, ShieldCheck, Home, Wrench, ChevronDown, LayoutDashboard, BookOpen, Bell } from 'lucide-react';
+import { Menu, X, LogOut, ShieldCheck, Home, Wrench, ChevronDown, LayoutDashboard, BookOpen, Bell, Users } from 'lucide-react';
 import { authAPI, bookingAPI } from '../API';
 import ImageWithFallback from './ImageWithFallback';
 import useBookingChatNotifications from '../hooks/useBookingChatNotifications';
@@ -66,14 +66,15 @@ export default function Navbar() {
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Services', href: '/services', icon: Wrench },
+    { name: 'Service Providers', href: '/service-providers', icon: Users },
   ];
 
   const authenticatedNav = isAuthenticated && user
-    ? [...navigation,
-        user.isProvider || user.skill
-          ? { name: 'Provider Dashboard', href: '/provider-dashboard', icon: BookOpen }
-          : { name: 'My Bookings', href: '/my-bookings', icon: BookOpen }
-      ]
+    ? user.isProvider || user.skill
+      ? [...navigation, { name: 'Provider Dashboard', href: '/provider-dashboard', icon: BookOpen }]
+      : isCustomer
+        ? [...navigation, { name: 'My Bookings', href: '/my-bookings', icon: BookOpen }]
+        : navigation
     : navigation;
 
   const accountImage = user?.avatar || user?.profileImg;

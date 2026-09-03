@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ProviderRegisterPage from './pages/ProviderRegisterPage'
 import ProviderProfile from './pages/ProviderProfile'
+import ServiceProviders from './pages/ServiceProviders'
 import Dashboard from './pages/Dashboard'
 import MyBookings from './pages/MyBookings'
 import ProviderDashboard from './pages/ProviderDashboard'
@@ -33,6 +34,7 @@ function AppContent() {
           <Route path="/services" element={<Services />} />
           <Route path="/booking" element={<Booking />} />
           <Route path="/provider/:id" element={<ProviderProfile />} />
+          <Route path="/service-providers" element={<ServiceProviders />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/provider-dashboard" element={<ProviderDashboard />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />

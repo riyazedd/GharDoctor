@@ -20,6 +20,7 @@ export default function ProviderProfile() {
   const [ratingMessage, setRatingMessage] = useState('');
   const [ratingError, setRatingError] = useState('');
   const [submittingRating, setSubmittingRating] = useState(false);
+  const isAuthenticated = Boolean(localStorage.getItem('user'));
 
   useEffect(() => {
     const fetchProvider = async () => {
@@ -95,6 +96,11 @@ export default function ProviderProfile() {
   }
 
   const handleBooking = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
     navigate('/booking', {
       state: {
         service: matchingService || undefined,
@@ -257,7 +263,7 @@ export default function ProviderProfile() {
                     : 'cursor-not-allowed bg-[#efe6de] text-[#8d7c75]'
                 }`}
               >
-                {serviceLookupLoading ? 'Preparing booking...' : provider.availability ? 'Book now' : 'Unavailable'}
+                {serviceLookupLoading ? 'Preparing booking...' : !provider.availability ? 'Unavailable' : isAuthenticated ? 'Book now' : 'Sign in to book'}
               </button>
             </div>
 

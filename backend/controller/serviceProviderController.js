@@ -34,6 +34,12 @@ const toPublicProvider = (provider) => ({
   isVerified: provider.isVerified,
 });
 
+const toProviderProfile = (provider) => ({
+  ...toPublicProvider(provider),
+  email: provider.email,
+  phone: provider.phone,
+});
+
 // @desc    Get all service providers
 // @route   GET /api/service-providers
 // @access  Public
@@ -53,13 +59,13 @@ export const getAdminServiceProviders = asyncHandler(async (req, res) => {
 // @route   GET /api/service-providers/:id
 // @access  Public
 export const getServiceProviderById = asyncHandler(async (req, res) => {
-  const provider = await ServiceProvider.findById(req.params.id).select('firstName lastName skill experience availability rating reviews completedJobs avatar isVerified');
+  const provider = await ServiceProvider.findById(req.params.id).select('firstName lastName email phone skill experience availability rating reviews completedJobs avatar isVerified');
   
   if (!provider) {
     return res.status(404).json({ message: 'Service provider not found' });
   }
   
-  res.status(200).json(toPublicProvider(provider));
+  res.status(200).json(toProviderProfile(provider));
 });
 
 // @desc    Get service providers by skill/category

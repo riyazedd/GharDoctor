@@ -86,6 +86,7 @@ const updateBooking = asyncHandler(async (req, res) => {
   const booking = await Booking.findById(req.params.id);
   if (!booking) return res.status(404).json({ message: 'Booking not found' });
   const { status, address, date, time, instructions } = req.body;
+  const wasCompleted = booking.status === 'Completed';
 
   if (isBookingProvider(req, booking)) {
     if (!status || !['In Progress', 'Completed', 'Cancelled'].includes(status)) {
@@ -109,6 +110,11 @@ const updateBooking = asyncHandler(async (req, res) => {
     return res.status(403).json({ message: 'You are not allowed to update this booking' });
   }
   const updatedBooking = await booking.save();
+  if (isBookingProvider(req, booking) && updatedBooking.status === 'Completed' && !wasCompleted) {
+    await ServiceProvider.findByIdAndUpdate(updatedBooking.serviceProviderId, {
+      $inc: { completedJobs: 1 },
+    });
+  }
   if (isBookingProvider(req, booking) && ['Completed', 'Cancelled'].includes(updatedBooking.status)) {
     req.app.get('io')?.to(String(updatedBooking._id)).emit('booking:status', {
       bookingId: String(updatedBooking._id),

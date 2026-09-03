@@ -79,6 +79,11 @@ export default function Services() {
   }, [selectedCategory, searchQuery, priceSort]);
 
   const handleBookNow = (service) => {
+    if (!localStorage.getItem('user')) {
+      navigate('/login');
+      return;
+    }
+
     navigate('/booking', { state: { service } });
   };
 
