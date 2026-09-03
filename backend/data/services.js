@@ -6,7 +6,6 @@ const services = [
     price: 2500,
     image: "https://images.unsplash.com/photo-1527804050349-3e6692d5bb62?w=500&h=300&fit=crop",
     isAvailable: true,
-    rating: 4.8,
     duration: "2-3 hours",
   },
 
@@ -17,7 +16,6 @@ const services = [
     price: 1800,
     image: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=500&h=300&fit=crop",
     isAvailable: true,
-    rating: 4.6,
     duration: "1-2 hours",
   },
 
@@ -28,7 +26,6 @@ const services = [
     price: 2200,
     image: "https://images.unsplash.com/photo-1621905167918-48416bd8575a?w=500&h=300&fit=crop",
     isAvailable: true,
-    rating: 4.7,
     duration: "1-2 hours",
   },
 
@@ -39,7 +36,6 @@ const services = [
     price: 3500,
     image: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=500&h=300&fit=crop",
     isAvailable: true,
-    rating: 4.9,
     duration: "2-4 hours",
   },
 
@@ -50,7 +46,6 @@ const services = [
     price: 5000,
     image: "https://images.unsplash.com/photo-1578926078328-123456789012?w=500&h=300&fit=crop",
     isAvailable: false,
-    rating: 4.5,
     duration: "4-6 hours",
   },
 
@@ -61,7 +56,6 @@ const services = [
     price: 2000,
     image: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=500&h=300&fit=crop",
     isAvailable: true,
-    rating: 4.4,
     duration: "2-3 hours",
   },
 ];

@@ -17,6 +17,9 @@ const serviceProviderSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      trim: true,
+      lowercase: true,
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please provide a valid email address'],
     },
 
     password: {
@@ -68,7 +71,7 @@ const serviceProviderSchema = new mongoose.Schema(
       type: Number,
       min: 0,
       max: 5,
-      default: 4.5,
+      default: 0,
     },
 
     reviews: {
@@ -89,6 +92,12 @@ const serviceProviderSchema = new mongoose.Schema(
     isVerified: {
       type: Boolean,
       default: false,
+    },
+
+    verificationNotice: {
+      message: { type: String, trim: true, maxlength: 500 },
+      createdAt: { type: Date },
+      isRead: { type: Boolean, default: false },
     },
   },
   {

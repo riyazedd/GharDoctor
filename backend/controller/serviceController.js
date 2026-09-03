@@ -33,6 +33,9 @@ const createService = asyncHandler(async (req, res) => {
   if (!image) {
     return res.status(400).json({ message: 'Service image is required' });
   }
+  if (!serviceName?.trim() || !category?.trim() || !description?.trim() || !Number.isFinite(Number(price)) || Number(price) < 0) {
+    return res.status(400).json({ message: 'Provide a name, category, description, and non-negative price' });
+  }
 
   const service = await Service.create({
     serviceName,

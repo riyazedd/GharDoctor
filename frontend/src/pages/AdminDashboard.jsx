@@ -135,7 +135,6 @@ function AdminDashboardContent() {
     } catch (error) {
       console.error('Error clearing session cookie:', error);
     }
-    localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/login');
   };

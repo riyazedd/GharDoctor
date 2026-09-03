@@ -80,6 +80,10 @@ export const providerAPI = {
   getAllProviders: () =>
     API.get("/api/service-providers"),
 
+  // Full PII and identity-document data is only available to administrators.
+  getAdminProviders: () =>
+    API.get('/api/service-providers/admin'),
+
   // Get single provider by ID
   getProviderById: (id) =>
     API.get(`/api/service-providers/${id}`),
@@ -103,6 +107,12 @@ export const providerAPI = {
   // Toggle provider verification status (admin)
   toggleVerification: (id) =>
     API.patch(`/api/service-providers/${id}/verify`),
+
+  rejectProvider: (id) =>
+    API.patch(`/api/service-providers/${id}/reject`),
+
+  getVerificationNotice: () =>
+    API.get('/api/service-providers/profile/verification-notice'),
 
   // Delete provider (admin only)
   deleteProvider: (id) =>

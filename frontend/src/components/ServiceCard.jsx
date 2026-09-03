@@ -17,7 +17,7 @@ export default function ServiceCard({ service, onBookNow }) {
       <div className="flex w-full flex-col justify-between">
         <div className="space-y-4">
           <div>
-            <h3 className="text-2xl font-black leading-tight tracking-[-0.05em] text-[#201a17]">
+            <h3 className="text-2xl font-black leading-tight tracking-tighter text-[#201a17]">
               {service.serviceName}
             </h3>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#5f524f]">
@@ -31,11 +31,6 @@ export default function ServiceCard({ service, onBookNow }) {
               <span className="font-medium">{service.duration || '2-3 hours'}</span>
             </div>
             <span className="h-4 w-px bg-[#cab7a9]"></span>
-            <div className="flex items-center gap-1.5 text-[#a67d51]">
-              <Star className="h-3.5 w-3.5 fill-[#d9b46f] text-[#d9b46f] sm:h-4 sm:w-4" />
-              <span className="font-medium">{service.rating || 4.8}</span>
-            </div>
-            <span className="h-4 w-px bg-[#cab7a9]"></span>
             <span className={`font-medium ${service.isAvailable ? 'text-[#3d6a4b]' : 'text-[#7c6b63]'}`}>
               {service.isAvailable ? 'Available' : 'Unavailable'}
             </span>
@@ -45,7 +40,7 @@ export default function ServiceCard({ service, onBookNow }) {
         <div className="mt-6 flex flex-col gap-5 sm:mt-auto sm:flex-row sm:items-end sm:justify-between sm:pt-2">
           <div>
             <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#866d63]">Starting from</span>
-            <div className="mt-2 text-3xl font-black tracking-[-0.05em] text-[#b86845]">Rs. {service.price}</div>
+            <div className="mt-2 text-3xl font-black tracking-tighter text-[#b86845]">Rs. {service.price}</div>
           </div>
 
           <button

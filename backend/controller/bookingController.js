@@ -1,244 +1,161 @@
+import { randomUUID } from 'crypto';
 import asyncHandler from '../middleware/asyncHandler.js';
 import Booking from '../models/bookingModel.js';
+import Service from '../models/serviceModel.js';
+import ServiceProvider from '../models/serviceProviderModel.js';
 
-// @desc    Create a new booking
-// @route   POST /api/bookings
-// @access  Private
+const TIME_SLOTS = ['09:00 AM', '11:30 AM', '02:00 PM', '04:30 PM'];
+const ACTIVE_STATUSES = ['Scheduled', 'In Progress', 'Completed'];
+const isValidDate = (date) => /^\d{4}-\d{2}-\d{2}$/.test(date)
+  && !Number.isNaN(new Date(`${date}T00:00:00`).getTime());
+const isAdmin = (req) => req.actor?.role === 'admin';
+const isBookingUser = (req, booking) => req.actor?.role === 'user' && String(booking.userId) === req.actor.id;
+const isBookingProvider = (req, booking) => req.actor?.role === 'provider' && String(booking.serviceProviderId) === req.actor.id;
+
+const canAccessBooking = (req, booking) => isAdmin(req) || isBookingUser(req, booking) || isBookingProvider(req, booking);
+
 const createBooking = asyncHandler(async (req, res) => {
-  const {
-    bookingId,
-    userId,
-    serviceId,
-    serviceProviderId,
-    userEmail,
-    userName,
-    serviceName,
-    price,
-    duration,
-    category,
-    image,
-    providerName,
-    providerPhone,
-    date,
-    time,
-    address,
-    instructions,
-  } = req.body;
+  if (req.actor?.role !== 'user') return res.status(403).json({ message: 'Only customers can create bookings' });
 
-  if (!userId || !serviceId || !serviceProviderId || !date || !time || !address) {
-    res.status(400).json({ message: "All required fields must be provided" });
-    return;
+  const { serviceId, serviceProviderId, date, time, address, instructions } = req.body;
+  if (!serviceId || !serviceProviderId || !date || !time || !address?.trim()) {
+    return res.status(400).json({ message: 'Service, provider, date, time, and address are required' });
+  }
+  if (!isValidDate(date) || date < new Date().toISOString().slice(0, 10)) {
+    return res.status(400).json({ message: 'Date must be today or a future date in YYYY-MM-DD format' });
+  }
+  if (!TIME_SLOTS.includes(time)) return res.status(400).json({ message: 'Invalid booking time slot' });
+
+  const [service, provider] = await Promise.all([Service.findById(serviceId), ServiceProvider.findById(serviceProviderId)]);
+  if (!service || !service.isAvailable) return res.status(400).json({ message: 'Selected service is unavailable' });
+  if (!provider || !provider.availability || !provider.isVerified) {
+    return res.status(400).json({ message: 'Selected provider is unavailable or unverified' });
+  }
+  if (provider.skill.toLowerCase() !== service.category.toLowerCase()) {
+    return res.status(400).json({ message: 'Provider does not offer the selected service category' });
   }
 
-  // Check if provider already has a booking for the same date and time
-  const existingBooking = await Booking.findOne({
-    serviceProviderId,
-    date,
-    time,
-    status: { $ne: "Cancelled" }, // Exclude cancelled bookings
-  });
-
-  if (existingBooking) {
-    res.status(409).json({
-      message: "This time slot is already booked for this provider on the selected date. Please choose a different time.",
+  try {
+    const booking = await Booking.create({
+      bookingId: `BK-${randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`,
+      userId: req.user._id,
+      serviceId: service._id,
+      serviceProviderId: provider._id,
+      userEmail: req.user.email,
+      userName: `${req.user.firstName} ${req.user.lastName}`.trim(),
+      serviceName: service.serviceName,
+      price: service.price,
+      duration: service.duration,
+      category: service.category,
+      image: service.image,
+      providerName: `${provider.firstName} ${provider.lastName}`.trim(),
+      providerPhone: provider.phone,
+      date,
+      time,
+      address: address.trim(),
+      instructions: instructions?.trim() || 'No special instructions provided.',
+      status: 'Scheduled',
     });
-    return;
+    return res.status(201).json(booking);
+  } catch (error) {
+    if (error?.code === 11000) return res.status(409).json({ message: 'This time slot has just been booked. Please choose another slot.' });
+    throw error;
   }
-
-  const booking = await Booking.create({
-    bookingId: bookingId || `BK-${Math.floor(100000 + Math.random() * 900000)}`,
-    userId,
-    serviceId,
-    serviceProviderId,
-    userEmail,
-    userName,
-    serviceName,
-    price,
-    duration,
-    category,
-    image,
-    providerName,
-    providerPhone,
-    date,
-    time,
-    address,
-    instructions: instructions || "No special instructions provided.",
-    status: "Scheduled",
-  });
-
-  res.status(201).json(booking);
 });
 
-// @desc    Get all bookings for a user
-// @route   GET /api/bookings/user/:userId
-// @access  Private
 const getUserBookings = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
-
-  const bookings = await Booking.find({ userId }).sort({ createdAt: -1 });
-
-  res.json(bookings);
-});
-
-// @desc    Get all bookings (admin)
-// @route   GET /api/bookings
-// @access  Private/Admin
-const getAllBookings = asyncHandler(async (req, res) => {
-  const bookings = await Booking.find().sort({ createdAt: -1 });
-
-  res.json(bookings);
-});
-
-// @desc    Get single booking by ID
-// @route   GET /api/bookings/:id
-// @access  Private
-const getBookingById = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const booking = await Booking.findById(id);
-
-  if (!booking) {
-    res.status(404).json({ message: "Booking not found" });
-    return;
+  if (!isAdmin(req) && (req.actor?.role !== 'user' || req.actor.id !== req.params.userId)) {
+    return res.status(403).json({ message: 'You are not allowed to view these bookings' });
   }
+  res.json(await Booking.find({ userId: req.params.userId }).sort({ createdAt: -1 }));
+});
 
+const getAllBookings = asyncHandler(async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ message: 'Admin access required' });
+  res.json(await Booking.find().sort({ createdAt: -1 }));
+});
+
+const getBookingById = asyncHandler(async (req, res) => {
+  const booking = await Booking.findById(req.params.id);
+  if (!booking) return res.status(404).json({ message: 'Booking not found' });
+  if (!canAccessBooking(req, booking)) return res.status(403).json({ message: 'You are not allowed to access this booking' });
   res.json(booking);
 });
 
-// @desc    Update booking status
-// @route   PUT /api/bookings/:id
-// @access  Private
 const updateBooking = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const booking = await Booking.findById(req.params.id);
+  if (!booking) return res.status(404).json({ message: 'Booking not found' });
   const { status, address, date, time, instructions } = req.body;
 
-  const booking = await Booking.findById(id);
-
-  if (!booking) {
-    res.status(404).json({ message: "Booking not found" });
-    return;
+  if (isBookingProvider(req, booking)) {
+    if (!status || !['In Progress', 'Completed', 'Cancelled'].includes(status)) {
+      return res.status(400).json({ message: 'Providers may only update booking status' });
+    }
+    if (status === 'In Progress' && booking.status !== 'Scheduled') return res.status(400).json({ message: 'Only scheduled bookings can be started' });
+    if (status === 'Completed' && !['Scheduled', 'In Progress'].includes(booking.status)) return res.status(400).json({ message: 'This booking cannot be completed' });
+    booking.status = status;
+  } else if (isBookingUser(req, booking)) {
+    if (booking.status !== 'Scheduled') return res.status(400).json({ message: 'Only scheduled bookings can be edited' });
+    if (status || date || time) return res.status(400).json({ message: 'Customers may only update address or instructions' });
+    if (address?.trim()) booking.address = address.trim();
+    if (instructions !== undefined) booking.instructions = instructions.trim() || 'No special instructions provided.';
+  } else if (isAdmin(req)) {
+    if (status) booking.status = status;
+    if (address?.trim()) booking.address = address.trim();
+    if (date) booking.date = date;
+    if (time) booking.time = time;
+    if (instructions !== undefined) booking.instructions = instructions.trim() || 'No special instructions provided.';
+  } else {
+    return res.status(403).json({ message: 'You are not allowed to update this booking' });
   }
-
-  if (status) booking.status = status;
-  if (address) booking.address = address;
-  if (date) booking.date = date;
-  if (time) booking.time = time;
-  if (instructions) booking.instructions = instructions;
-
-  booking.updatedAt = Date.now();
-
   const updatedBooking = await booking.save();
-
+  if (isBookingProvider(req, booking) && ['Completed', 'Cancelled'].includes(updatedBooking.status)) {
+    req.app.get('io')?.to(String(updatedBooking._id)).emit('booking:status', {
+      bookingId: String(updatedBooking._id),
+      status: updatedBooking.status,
+      updatedById: req.actor.id,
+      updatedAt: updatedBooking.updatedAt,
+      message: updatedBooking.status === 'Completed'
+        ? `Your ${updatedBooking.serviceName} booking has been completed.`
+        : `Your ${updatedBooking.serviceName} booking has been cancelled by the provider.`,
+    });
+  }
   res.json(updatedBooking);
 });
 
-// @desc    Cancel booking
-// @route   DELETE /api/bookings/:id
-// @access  Private
 const cancelBooking = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const booking = await Booking.findById(id);
-
-  if (!booking) {
-    res.status(404).json({ message: "Booking not found" });
-    return;
+  const booking = await Booking.findById(req.params.id);
+  if (!booking) return res.status(404).json({ message: 'Booking not found' });
+  if (!isAdmin(req) && !isBookingUser(req, booking)) {
+    return res.status(403).json({ message: 'Only the customer or an admin can cancel this booking' });
   }
-
-  booking.status = "Cancelled";
-  booking.updatedAt = Date.now();
-
-  const cancelledBooking = await booking.save();
-
-  res.json(cancelledBooking);
-});
-
-
-
-// @desc    Get all bookings for a service provider
-// @route   GET /api/bookings/provider/:providerId
-// @access  Private
-const getProviderBookings = asyncHandler(async (req, res) => {
-  const { providerId } = req.params;
-
-  const bookings = await Booking.find({ serviceProviderId: providerId }).sort({
-    createdAt: -1,
-  });
-
-  res.json(bookings);
+  if (!['Scheduled', 'In Progress'].includes(booking.status)) return res.status(400).json({ message: 'This booking cannot be cancelled' });
+  booking.status = 'Cancelled';
+  res.json(await booking.save());
 });
 
 const deleteBooking = asyncHandler(async (req, res) => {
   const booking = await Booking.findById(req.params.id);
-
-  if (!booking) {
-    return res.status(404).json({
-      success: false,
-      message: "Booking not found",
-    });
-  }
-
-  if (
-    booking.status !== "Cancelled" &&
-    booking.status !== "Completed"
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: "Only cancelled or completed bookings can be deleted.",
-    });
-  }
-
+  if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
+  if (!isAdmin(req) && !isBookingUser(req, booking)) return res.status(403).json({ success: false, message: 'You are not allowed to delete this booking' });
+  if (!['Cancelled', 'Completed'].includes(booking.status)) return res.status(400).json({ success: false, message: 'Only cancelled or completed bookings can be deleted.' });
   await booking.deleteOne();
-
-  res.status(200).json({
-    success: true,
-    message: "Booking deleted successfully.",
-  });
+  res.json({ success: true, message: 'Booking deleted successfully.' });
 });
 
-// @desc    Get available time slots for a provider on a specific date
-// @route   GET /api/bookings/available-slots/:providerId/:date
-// @access  Public
+const getProviderBookings = asyncHandler(async (req, res) => {
+  if (!isAdmin(req) && (req.actor?.role !== 'provider' || req.actor.id !== req.params.providerId)) {
+    return res.status(403).json({ message: 'You are not allowed to view these bookings' });
+  }
+  res.json(await Booking.find({ serviceProviderId: req.params.providerId }).sort({ createdAt: -1 }));
+});
+
 const getAvailableTimeSlots = asyncHandler(async (req, res) => {
   const { providerId, date } = req.params;
-
-  // All available time slots
-  const allTimeSlots = [
-    "09:00 AM",
-    "11:30 AM",
-    "02:00 PM",
-    "04:30 PM",
-  ];
-
-  // Get booked time slots for this provider on the given date
-  const bookedSlots = await Booking.find({
-    serviceProviderId: providerId,
-    date,
-    status: { $ne: "Cancelled" }, // Exclude cancelled bookings
-  }).select("time");
-
-  // Extract just the time values
+  if (!isValidDate(date)) return res.status(400).json({ message: 'Invalid date format' });
+  const bookedSlots = await Booking.find({ serviceProviderId: providerId, date, status: { $in: ACTIVE_STATUSES } }).select('time');
   const bookedTimes = bookedSlots.map((booking) => booking.time);
-
-  // Filter out booked slots
-  const availableSlots = allTimeSlots.filter((slot) => !bookedTimes.includes(slot));
-
-  res.json({
-    date,
-    allSlots: allTimeSlots,
-    bookedSlots: bookedTimes,
-    availableSlots,
-  });
+  res.json({ date, allSlots: TIME_SLOTS, bookedSlots: bookedTimes, availableSlots: TIME_SLOTS.filter((slot) => !bookedTimes.includes(slot)) });
 });
 
-export {
-  createBooking,
-  getUserBookings,
-  getAllBookings,
-  getBookingById,
-  updateBooking,
-  cancelBooking,
-  deleteBooking,
-  getProviderBookings,
-  getAvailableTimeSlots,
-};
+export { createBooking, getUserBookings, getAllBookings, getBookingById, updateBooking, cancelBooking, deleteBooking, getProviderBookings, getAvailableTimeSlots };

@@ -2,11 +2,17 @@ export const buildUploadedFileUrl = (req, filename) => {
   return `${req.protocol}://${req.get('host')}/uploads/${filename}`;
 };
 
+export const buildPrivateDocumentUrl = (req, filename) => {
+  return `${req.protocol}://${req.get('host')}/api/service-providers/documents/${filename}`;
+};
+
 export const resolveUploadedImage = (req, fieldName, fallback = '') => {
   const file = req.files?.[fieldName]?.[0] || (req.file?.fieldname === fieldName ? req.file : null);
 
   if (file?.filename) {
-    return buildUploadedFileUrl(req, file.filename);
+    return fieldName === 'citizenshipImage'
+      ? buildPrivateDocumentUrl(req, file.filename)
+      : buildUploadedFileUrl(req, file.filename);
   }
 
   const bodyValue = req.body?.[fieldName];

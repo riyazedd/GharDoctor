@@ -21,7 +21,7 @@ const importData= async ()=>{
         // await Product.deleteMany();
         await User.deleteMany();
         await Service.deleteMany();
-        await ServiceProvider.deleteMany();
+        // await ServiceProvider.deleteMany();
         await Category.deleteMany();
 
         const createdUser = await User.insertMany(users);
@@ -35,7 +35,7 @@ const importData= async ()=>{
             return {...category}
         })
 
-        const createdServiceProvider = await ServiceProvider.insertMany(serviceProviders)
+        // const createdServiceProvider = await ServiceProvider.insertMany(serviceProviders)
 
         await Service.insertMany(sampleService);
         await Category.insertMany(sampleCategory);

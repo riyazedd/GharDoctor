@@ -75,8 +75,9 @@ export default function Home() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate('/services');
+    const query = searchQuery.trim();
+    if (query) {
+      navigate(`/services?search=${encodeURIComponent(query)}`);
     }
   };
 
@@ -141,7 +142,7 @@ export default function Home() {
               <div className="overflow-hidden rounded-[30px] border border-[#e8d9ca] bg-[#fffaf5] p-3 shadow-[0_20px_50px_rgba(101,77,61,0.08)]">
                 <div className="overflow-hidden rounded-[26px] border border-[#ebdcc9] bg-[#f6eee6]">
                   <img
-                    src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80"
+                    src="hero.jpg"
                     alt="Professional fixing home maintenance issue"
                     className="h-110 w-full object-cover"
                   />

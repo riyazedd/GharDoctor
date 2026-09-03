@@ -43,7 +43,7 @@ export default function ProviderCard({ provider, isSelected, isAvailable, onSele
 
           <div className="flex items-center gap-1 rounded-full bg-[#f7efe5] px-2 py-1 text-[10px] font-bold text-[#8a5a3c]">
             <Star className="h-3 w-3 fill-[#d9b46f] text-[#d9b46f]" />
-            {provider.rating || 4.5}
+            {provider.rating}
           </div>
         </div>
 

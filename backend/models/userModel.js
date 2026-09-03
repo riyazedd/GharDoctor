@@ -6,27 +6,41 @@ const userSchema = new mongoose.Schema(
     firstName: {
       type: String,
       required: true,
+      trim: true,
+      minlength: 1,
+      maxlength: 50,
     },
 
     lastName: {
       type: String,
       required: true,
+      trim: true,
+      minlength: 1,
+      maxlength: 50,
     },
 
     email: {
       type: String,
       required: true,
       unique: true,
+      trim: true,
+      lowercase: true,
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please provide a valid email address'],
     },
 
     phone: {
       type: String,
       required: true,
+      trim: true,
+      match: [/^[0-9+\-()\s]{7,20}$/, 'Please provide a valid phone number'],
     },
 
     address: {
       type: String,
       required: true,
+      trim: true,
+      minlength: 5,
+      maxlength: 300,
     },
 
     profileImg: {
@@ -37,6 +51,8 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      minlength: 8,
+      maxlength: 128,
     },
 
     isAdmin: {

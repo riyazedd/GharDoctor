@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   User, Briefcase, Star, CheckCircle, AlertCircle, LogOut, MessageSquare,
-  Calendar, Clock, MapPin, Phone, Mail, Activity, TrendingUp, Power, Edit2, Save
+  Calendar, Clock, MapPin, Phone, Mail, Activity, TrendingUp, Power, Edit2, Save, Bell
 } from 'lucide-react';
 import { authAPI, bookingAPI, providerAPI } from '../API';
 import { ToastMessages } from '../context/ToastContext';
@@ -33,19 +33,29 @@ export default function ProviderDashboard() {
     avatar: '',
   });
   const [avatarPreview, setAvatarPreview] = useState('');
+  const [verificationNotice, setVerificationNotice] = useState(null);
+  const [hasUnreadVerificationNotice, setHasUnreadVerificationNotice] = useState(false);
+  const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
 
-  const { unreadCounts, notification, clearUnreadForBooking, dismissNotification } = useBookingChatNotifications({
+  const {
+    unreadCounts,
+    unreadTotal,
+    notification,
+    notifications,
+    clearUnreadForBooking,
+    clearAllUnread,
+    dismissNotification,
+  } = useBookingChatNotifications({
     bookings,
     currentUser: user,
     activeBookingId: activeChatBooking?._id || null,
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
     const userData = userStr ? JSON.parse(userStr) : null;
 
-    if (!token || !userData) {
+    if (!userData) {
       navigate('/login');
       return;
     }
@@ -56,6 +66,16 @@ export default function ProviderDashboard() {
     }
 
     setUser(userData);
+
+    providerAPI.getVerificationNotice()
+      .then((response) => {
+        setVerificationNotice(response.data.notice);
+        setHasUnreadVerificationNotice(Boolean(response.data.hasUnreadNotice));
+      })
+      .catch(() => {
+        setVerificationNotice(null);
+        setHasUnreadVerificationNotice(false);
+      });
 
     const fetchProviderBookings = async () => {
       try {
@@ -95,7 +115,6 @@ export default function ProviderDashboard() {
       } catch (error) {
         console.error('Error clearing session cookie:', error);
       }
-      localStorage.removeItem('token');
       localStorage.removeItem('user');
       navigate('/');
     }
@@ -211,6 +230,18 @@ export default function ProviderDashboard() {
   const scheduledBookings = bookings.filter((booking) => booking.status === 'Scheduled');
   const inProgressBookings = bookings.filter((booking) => booking.status === 'In Progress');
   const completedBookings = bookings.filter((booking) => booking.status === 'Completed');
+  const totalNotificationCount = unreadTotal + (hasUnreadVerificationNotice ? 1 : 0);
+
+  const toggleNotificationMenu = () => {
+    setNotificationMenuOpen((previous) => {
+      const isOpening = !previous;
+      if (isOpening) {
+        clearAllUnread();
+        setHasUnreadVerificationNotice(false);
+      }
+      return isOpening;
+    });
+  };
 
   return (
     <div className="min-h-screen bg-[#f7f1ea] pb-16 pt-8">
@@ -234,6 +265,72 @@ export default function ProviderDashboard() {
             </div>
 
             <div className="flex w-full flex-wrap gap-3 md:w-auto md:flex-nowrap">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={toggleNotificationMenu}
+                  className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[#eadcc7] bg-[#fffaf5] text-[#5b4d49] transition-all hover:text-[#201a17]"
+                  aria-label="Open notifications"
+                  aria-expanded={notificationMenuOpen}
+                >
+                  <Bell className="h-5 w-5" />
+                  {totalNotificationCount > 0 && (
+                    <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#d77a4a] px-1 text-[10px] font-bold text-white ring-2 ring-[#fffdfb]">
+                      {totalNotificationCount > 99 ? '99+' : totalNotificationCount}
+                    </span>
+                  )}
+                </button>
+
+                {notificationMenuOpen && (
+                  <div className="absolute right-0 z-50 mt-3 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-[24px] border border-[#eadcc7] bg-[#fffdfb] shadow-[0_18px_40px_rgba(61,38,26,0.14)]">
+                    <div className="flex items-center justify-between border-b border-[#efe6dc] px-4 py-3">
+                      <div>
+                        <p className="text-sm font-bold text-[#201a17]">Notifications</p>
+                        <p className="text-xs text-[#655d5a]">{unreadTotal ? `${unreadTotal} unread message${unreadTotal === 1 ? '' : 's'}` : 'You’re all caught up'}</p>
+                      </div>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {verificationNotice && (
+                        <div className="border-b border-rose-100 bg-rose-50 px-4 py-3 text-left">
+                          <div className="flex items-start gap-3">
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-rose-900">Provider application rejected</p>
+                              <p className="mt-0.5 text-xs text-rose-800">{verificationNotice.message}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {notifications.length > 0 ? notifications.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            const booking = bookings.find((bookingItem) => String(bookingItem._id) === String(item.bookingId));
+                            if (booking) {
+                              openChatForBooking(booking);
+                            }
+                            setNotificationMenuOpen(false);
+                          }}
+                          className={`w-full border-b border-[#f0e5d9] px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-[#f8f3ee] ${
+                            unreadCounts[String(item.bookingId)] > 0 ? 'bg-[#fff8f1]' : ''
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#d77a4a]" />
+                            <span className="min-w-0">
+                              <span className="block truncate text-sm font-bold text-[#201a17]">{item.title}</span>
+                              <span className="mt-0.5 block line-clamp-2 text-xs text-[#655d5a]">{item.message}</span>
+                            </span>
+                          </div>
+                        </button>
+                      )) : !verificationNotice && (
+                        <p className="px-4 py-8 text-center text-sm text-[#655d5a]">No notifications yet.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
               <button
                 onClick={toggleAvailability}
                 className={`flex items-center justify-center gap-2 rounded-full px-5 py-2.5 font-bold transition-all ${

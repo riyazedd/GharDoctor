@@ -12,8 +12,12 @@ import {
   rateServiceProvider,
   registerServiceProvider,
   loginServiceProvider,
+  getAdminServiceProviders,
+  getPrivateDocument,
+  rejectProviderVerification,
+  getVerificationNotice,
 } from '../controller/serviceProviderController.js';
-import { protect, admin, protectProvider } from '../middleware/authMiddleware.js';
+import { protect, admin, protectProvider, protectAny } from '../middleware/authMiddleware.js';
 import upload from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
@@ -24,6 +28,9 @@ router.post('/register', upload.fields([
   { name: 'avatar', maxCount: 1 },
 ]), registerServiceProvider);
 router.post('/login', loginServiceProvider);
+router.get('/admin', protect, admin, getAdminServiceProviders);
+router.get('/documents/:filename', protectAny, getPrivateDocument);
+router.get('/profile/verification-notice', protectProvider, getVerificationNotice);
 router.get('/', getServiceProviders);
 router.get('/category/:category', getProvidersByCategory);
 router.route('/profile').put(protectProvider, upload.fields([
@@ -45,5 +52,6 @@ router.put('/:id', protect, admin, upload.fields([
 router.delete('/:id', protect, admin, deleteServiceProvider);
 router.patch('/:id/availability', protect, admin, toggleProviderAvailability);
 router.patch('/:id/verify', protect, admin, toggleProviderVerification);
+router.patch('/:id/reject', protect, admin, rejectProviderVerification);
 
 export default router;

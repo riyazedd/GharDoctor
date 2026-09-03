@@ -1,51 +1,35 @@
 const categories = [
   {
     categoryName: "Cleaning",
-    icon: "Sparkles",
     description: "Deep cleaning, dusting, and organizing",
-    color: "from-cyan-500 to-blue-600",
   },
   {
     categoryName: "Plumbing",
-    icon: "Droplet",
     description: "Leakages, pipes, and installations",
-    color: "from-blue-500 to-indigo-600",
   },
   {
     categoryName: "Electrical",
-    icon: "Zap",
     description: "Wiring, fixtures, and repairs",
-    color: "from-amber-500 to-orange-600",
   },
   {
     categoryName: "Painting",
-    icon: "Paintbrush",
     description: "Wall paint, texture, and touchups",
-    color: "from-purple-500 to-pink-600",
   },
   {
     categoryName: "Gardening",
-    icon: "Flower",
     description: "Lawn trim, planting, and landscaping",
-    color: "from-emerald-500 to-teal-600",
   },
   {
     categoryName: "Appliance Repair",
-    icon: "Wrench",
     description: "AC, Fridge, Washing Machines",
-    color: "from-rose-500 to-red-600",
   },
   {
     categoryName: "Carpentry",
-    icon: "Hammer",
     description: "Furniture, doors, and cabinet repairs",
-    color: "from-yellow-600 to-amber-700",
   },
   {
     categoryName: "Pest Control",
-    icon: "ShieldAlert",
     description: "Termites, bugs, and pest elimination",
-    color: "from-slate-600 to-zinc-800",
   },
 ];
 

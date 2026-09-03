@@ -51,7 +51,10 @@ export const initSocket = (server) => {
 
   io.use(async (socket, next) => {
     try {
-      const token = socket.handshake.auth?.token;
+      const token = socket.handshake.headers.cookie
+        ?.split(';')
+        .map((cookie) => cookie.trim().split('='))
+        .find(([name]) => name === 'token')?.[1];
 
       if (!token) {
         return next(new Error('Authentication token missing'));

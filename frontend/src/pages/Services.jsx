@@ -15,12 +15,13 @@ export default function Services() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Set category from URL parameter on mount and scroll to top
+  // Apply category and search filters passed in the URL, then scroll to top.
   useEffect(() => {
     const categoryFromURL = searchParams.get('category');
-    if (categoryFromURL) {
-      setSelectedCategory(categoryFromURL);
-    }
+    const searchFromURL = searchParams.get('search');
+
+    setSelectedCategory(categoryFromURL || 'All');
+    setSearchQuery(searchFromURL || '');
     window.scrollTo(0, 0);
   }, [searchParams]);
 

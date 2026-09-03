@@ -12,7 +12,6 @@ import { ToastMessages } from '../context/ToastContext';
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
 
@@ -23,7 +22,7 @@ export default function Dashboard() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!token || !user) {
+    if (!user) {
       navigate('/login');
       return;
     }
@@ -41,7 +40,7 @@ export default function Dashboard() {
     };
 
     fetchBookings();
-  }, [token, user, navigate]);
+  }, [user, navigate]);
 
   const cancelBooking = async (bookingId) => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) {
@@ -70,7 +69,6 @@ export default function Dashboard() {
       } catch (error) {
         console.error('Error clearing session cookie:', error);
       }
-      localStorage.removeItem('token');
       localStorage.removeItem('user');
       navigate('/');
     }

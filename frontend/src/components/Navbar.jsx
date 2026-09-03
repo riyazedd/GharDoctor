@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, LogOut, ShieldCheck, Calendar, Home, Wrench, ChevronDown, LayoutDashboard, BookOpen } from 'lucide-react';
+import { Menu, X, LogOut, ShieldCheck, Home, Wrench, ChevronDown, LayoutDashboard, BookOpen, Bell } from 'lucide-react';
 import { authAPI, bookingAPI } from '../API';
 import ImageWithFallback from './ImageWithFallback';
+import useBookingChatNotifications from '../hooks/useBookingChatNotifications';
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -12,23 +13,31 @@ export default function Navbar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [bookingsCount, setBookingsCount] = useState(0);
+  const [bookings, setBookings] = useState([]);
+  const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const notificationRef = useRef(null);
+  const isCustomer = Boolean(user && !user.isProvider && !user.skill && !user.isAdmin);
+  const { unreadTotal, notifications, clearAllUnread } = useBookingChatNotifications({
+    bookings,
+    currentUser: isCustomer ? user : null,
+    activeBookingId: null,
+  });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
 
-    if (token && userData) {
+    if (userData) {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
       setIsAuthenticated(true);
       setIsAdmin(parsedUser.isAdmin || false);
 
       const fetchBookingsCount = async () => {
+        if (parsedUser.isProvider || parsedUser.skill || parsedUser.isAdmin) return;
         try {
           const response = await bookingAPI.getUserBookings(parsedUser._id);
-          setBookingsCount(response.data.length);
+          setBookings(response.data);
         } catch (err) {
           console.error('Error fetching bookings count:', err);
         }
@@ -43,13 +52,16 @@ export default function Navbar() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setNotificationMenuOpen(false);
+      }
     };
 
-    if (dropdownOpen) {
+    if (dropdownOpen || notificationMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [dropdownOpen]);
+  }, [dropdownOpen, notificationMenuOpen]);
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
@@ -72,13 +84,21 @@ export default function Navbar() {
     } catch (error) {
       console.error('Error clearing session cookie:', error);
     }
-    localStorage.removeItem('token');
     localStorage.removeItem('user');
     setIsAuthenticated(false);
     setUser(null);
     setIsAdmin(false);
+    setBookings([]);
     navigate('/');
     setMobileMenuOpen(false);
+  };
+
+  const toggleNotifications = () => {
+    setNotificationMenuOpen((previous) => {
+      const isOpening = !previous;
+      if (isOpening) clearAllUnread();
+      return isOpening;
+    });
   };
 
   const NavLink = ({ item, isMobile = false }) => {
@@ -132,7 +152,7 @@ export default function Navbar() {
               <a
                 href="/admin"
                 className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ${
-                  currentView === 'admin'
+                  location.pathname === '/admin'
                     ? 'border border-[#e7ba9a] bg-[#f9efe6] text-[#7d3d22] shadow-[0_10px_22px_rgba(201,109,66,0.08)]'
                     : 'border border-transparent text-[#5a4b45] hover:bg-[#f4e7dc] hover:text-[#1f1a17]'
                 }`}
@@ -145,11 +165,56 @@ export default function Navbar() {
 
           <div className="hidden items-center gap-4 md:flex">
             {isAuthenticated && user ? (
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex cursor-pointer items-center gap-2.5 rounded-full border border-[#eadcc7] bg-[#fffdfb] px-3 py-1.5 transition-all duration-200 hover:border-[#d5b496]"
-                >
+              <>
+                {isCustomer && (
+                  <div className="relative" ref={notificationRef}>
+                    <button
+                      type="button"
+                      onClick={toggleNotifications}
+                      className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#eadcc7] bg-[#fffdfb] text-[#5b4d49] transition-colors hover:text-[#201a17]"
+                      aria-label="Open notifications"
+                      aria-expanded={notificationMenuOpen}
+                    >
+                      <Bell className="h-5 w-5" />
+                      {unreadTotal > 0 && (
+                        <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#d77a4a] px-1 text-[10px] font-bold text-white ring-2 ring-[#fffdfb]">
+                          {unreadTotal > 99 ? '99+' : unreadTotal}
+                        </span>
+                      )}
+                    </button>
+                    {notificationMenuOpen && (
+                      <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-[#eadcc7] bg-[#fffdfb] shadow-xl">
+                        <div className="border-b border-[#f0e5d9] px-4 py-3">
+                          <p className="text-sm font-bold text-[#201a17]">Notifications</p>
+                          <p className="text-xs text-[#655d5a]">Chat and booking updates</p>
+                        </div>
+                        <div className="max-h-80 overflow-y-auto">
+                          {notifications.length ? notifications.map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => {
+                                setNotificationMenuOpen(false);
+                                navigate('/my-bookings');
+                              }}
+                              className="w-full border-b border-[#f0e5d9] px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-[#f9efe6]"
+                            >
+                              <p className="truncate text-sm font-semibold text-[#201a17]">{item.title}</p>
+                              <p className="mt-0.5 line-clamp-2 text-xs text-[#655d5a]">{item.message}</p>
+                            </button>
+                          )) : (
+                            <p className="px-4 py-8 text-center text-sm text-[#655d5a]">No notifications yet.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex cursor-pointer items-center gap-2.5 rounded-full border border-[#eadcc7] bg-[#fffdfb] px-3 py-1.5 transition-all duration-200 hover:border-[#d5b496]"
+                  >
                   <ImageWithFallback
                     src={accountImage}
                     alt={`${user.firstName || 'User'} account`}
@@ -194,7 +259,8 @@ export default function Navbar() {
                     </button>
                   </div>
                 )}
-              </div>
+                </div>
+              </>
             ) : (
               <div className="flex items-center gap-3">
                 <a

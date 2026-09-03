@@ -25,18 +25,12 @@ export default function ChatBox({ isOpen, booking, currentUser, onClose }) {
       return undefined;
     }
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Please sign in again to use chat.');
-      return undefined;
-    }
-
     setMessages([]);
     setDraft('');
     setError('');
     setLoadingHistory(true);
 
-    const socket = createChatSocket(token);
+    const socket = createChatSocket();
     socketRef.current = socket;
 
     socket.on('connect_error', () => {

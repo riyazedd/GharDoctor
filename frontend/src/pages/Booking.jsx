@@ -15,10 +15,9 @@ export default function Booking() {
   const shouldAutoSelectProvider = location.state?.shouldAutoSelectProvider || false;
 
   // Get auth state from localStorage
-  const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
-  const isAuthenticated = !!token;
+  const isAuthenticated = !!user;
 
   // States
   const [activeService, setActiveService] = useState(selectedService || null);
@@ -38,6 +37,14 @@ export default function Booking() {
   const [submitting, setSubmitting] = useState(false);
   const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+
+  // Use a local YYYY-MM-DD value so the date input starts at the user's current day.
+  const today = new Date();
+  const minimumBookingDate = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-');
 
   // Fetch services on mount
   useEffect(() => {
@@ -164,6 +171,12 @@ export default function Booking() {
       return;
     }
 
+    if (bookingDate < minimumBookingDate) {
+      setError('Appointments can only be scheduled for today or a future date.');
+      setSubmitting(false);
+      return;
+    }
+
     if (!serviceAddress.trim()) {
       setError('Please provide a service address.');
       setSubmitting(false);
@@ -279,7 +292,7 @@ export default function Booking() {
             return (
               <div
                 key={step.id}
-                className={`rounded-[24px] border p-4 ${
+                className={`rounded-3xl border p-4 ${
                   isActive
                     ? 'border-[#d7b091] bg-[#f9efe7]'
                     : isComplete
@@ -422,6 +435,7 @@ export default function Booking() {
                     <input
                       type="date"
                       required
+                      min={minimumBookingDate}
                       value={bookingDate}
                       onChange={(e) => setBookingDate(e.target.value)}
                       className="w-full rounded-[18px] border border-[#e7d8c8] bg-[#fffdfb] py-3 pl-10 pr-4 text-sm text-[#2b241f] outline-none transition-colors focus:border-[#d38b66]"
@@ -561,14 +575,14 @@ export default function Booking() {
                     )}
                     <div className="flex items-center justify-between gap-4 pt-2">
                       <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[#7d6a62]">Total</span>
-                      <span className="text-3xl font-black tracking-[-0.05em] text-[#b86845]">Rs. {activeService.price}</span>
+                      <span className="text-3xl font-black tracking-tighter text-[#b86845]">Rs. {activeService.price}</span>
                     </div>
                   </div>
 
                   <button
                     type="submit"
                     disabled={!isAuthenticated || submitting}
-                    className="mt-8 w-full rounded-full bg-gradient-to-r from-[#d77a4a] to-[#d9b46f] px-6 py-4 text-sm font-bold text-white transition-all duration-200 shadow-[0_12px_24px_rgba(201,109,66,0.15)] disabled:cursor-not-allowed disabled:opacity-50 hover:brightness-105"
+                    className="mt-8 w-full rounded-full bg-linear-to-r from-[#d77a4a] to-[#d9b46f] px-6 py-4 text-sm font-bold text-white transition-all duration-200 shadow-[0_12px_24px_rgba(201,109,66,0.15)] disabled:cursor-not-allowed disabled:opacity-50 hover:brightness-105"
                   >
                     {submitting ? 'Processing...' : 'Confirm appointment'}
                   </button>

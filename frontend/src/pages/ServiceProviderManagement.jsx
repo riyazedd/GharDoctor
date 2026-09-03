@@ -50,7 +50,7 @@ const ServiceProviderManagementContent = () => {
   const fetchProviders = async () => {
     setLoading(true);
     try {
-      const response = await providerAPI.getAllProviders();
+      const response = await providerAPI.getAdminProviders();
       setProviders(response.data);
       setError(null);
     } catch (err) {
@@ -217,6 +217,20 @@ const ServiceProviderManagementContent = () => {
     } catch (err) {
       console.error('Error toggling verification:', err);
       setError('Failed to update verification status');
+    }
+  };
+
+  const handleRejectProvider = async (providerId) => {
+    if (!window.confirm('Reject this provider? Their account will be marked unverified and unavailable, and they will receive a notification.')) return;
+    try {
+      const response = await providerAPI.rejectProvider(providerId);
+      const updated = response.data.provider;
+      setProviders((previous) => previous.map((provider) => provider._id === providerId ? { ...provider, ...updated } : provider));
+      setDetailsProvider((provider) => provider?._id === providerId ? { ...provider, ...updated } : provider);
+      toast.success(response.data.message);
+    } catch (err) {
+      console.error('Error rejecting provider:', err);
+      setError(err.response?.data?.message || 'Failed to reject provider');
     }
   };
 
@@ -679,6 +693,9 @@ const ServiceProviderManagementContent = () => {
 
             <div className="flex flex-col-reverse gap-3 border-t border-slate-700/50 p-4 sm:flex-row sm:p-6">
               <button onClick={handleCloseDetails} className="flex-1 rounded-lg border border-slate-600/50 px-4 py-2 text-slate-300 hover:bg-slate-700/50">Close</button>
+              <button onClick={() => handleRejectProvider(detailsProvider._id)} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700">
+                <ShieldOff className="h-4 w-4" /> Reject
+              </button>
               <button onClick={() => handleToggleVerify(detailsProvider._id)} className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 font-medium text-white ${detailsProvider.isVerified ? 'bg-amber-600 hover:bg-amber-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
                 {detailsProvider.isVerified ? <ShieldOff className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
                 {detailsProvider.isVerified ? 'Revoke Verification' : 'Verify Provider'}

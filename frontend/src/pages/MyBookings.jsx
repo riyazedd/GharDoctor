@@ -12,7 +12,6 @@ import useBookingChatNotifications from '../hooks/useBookingChatNotifications';
 export default function MyBookings() {
   const navigate = useNavigate();
 
-  const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
 
@@ -22,18 +21,22 @@ export default function MyBookings() {
   const [error, setError] = useState('');
   const [activeChatBooking, setActiveChatBooking] = useState(null);
 
-  const { unreadCounts, notification, clearUnreadForBooking, dismissNotification } = useBookingChatNotifications({
+  const {
+    unreadCounts,
+    notification,
+    clearUnreadForBooking,
+    dismissNotification,
+  } = useBookingChatNotifications({
     bookings,
     currentUser: user,
     activeBookingId: activeChatBooking?._id || null,
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
     const user = userStr ? JSON.parse(userStr) : null;
 
-    if (!token || !user) {
+    if (!user) {
       navigate('/login');
       return;
     }
@@ -159,7 +162,9 @@ export default function MyBookings() {
           <div className="fixed bottom-5 right-5 z-40 w-[calc(100vw-2rem)] max-w-sm rounded-[24px] border border-[#d3bda6] bg-[#201a17] p-4 text-white shadow-2xl shadow-[#201a17]/20">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#f7c28e]">New message</p>
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#f7c28e]">
+                  {notification.type === 'booking-status' ? 'Booking update' : 'New message'}
+                </p>
                 <h3 className="text-sm font-bold text-white">{notification.title}</h3>
                 <p className="mt-1 text-sm text-[#d8d0cc]">{notification.message}</p>
               </div>
@@ -179,7 +184,7 @@ export default function MyBookings() {
                 }}
                 className="flex-1 rounded-full bg-[#d77a4a] px-4 py-2 text-sm font-bold text-white"
               >
-                View chat
+                {notification.type === 'booking-status' ? 'View booking' : 'View chat'}
               </button>
               <button
                 type="button"

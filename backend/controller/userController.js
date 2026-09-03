@@ -3,6 +3,9 @@ import generateToken from '../utils/generateToken.js';
 import User from '../models/userModel.js';
 import { parseBooleanField, resolveUploadedImage } from '../utils/uploadUtils.js';
 
+const isStrongPassword = (password) => typeof password === 'string'
+  && password.length >= 8 && password.length <= 128 && /[A-Za-z]/.test(password) && /\d/.test(password);
+
 // @desc    Auth user & get token
 // @route   POST /api/users/login
 // @access  Public
@@ -12,7 +15,7 @@ const authUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
 
   if (user && (await user.matchPassword(password))) {
-    const token = generateToken(res, user._id);
+    generateToken(res, user._id);
 
     res.json({
       _id: user._id,
@@ -23,7 +26,6 @@ const authUser = asyncHandler(async (req, res) => {
       address: user.address,
       profileImg: user.profileImg,
       isAdmin: user.isAdmin,
-      token: token,
     });
   } else {
     res.status(401).json({ message: 'Invalid email or password' });
@@ -36,6 +38,13 @@ const authUser = asyncHandler(async (req, res) => {
 const registerUser = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, phone, address } = req.body;
   const profileImg = resolveUploadedImage(req, 'profileImg');
+
+  if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !phone?.trim() || !address?.trim()) {
+    return res.status(400).json({ message: 'All required fields must be provided' });
+  }
+  if (!isStrongPassword(password)) {
+    return res.status(400).json({ message: 'Password must have at least 8 characters and include a letter and number' });
+  }
 
   const userExists = await User.findOne({ email });
 
@@ -56,7 +65,7 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
-    const token = generateToken(res, user._id);
+    generateToken(res, user._id);
 
     res.status(201).json({
       _id: user._id,
@@ -67,7 +76,6 @@ const registerUser = asyncHandler(async (req, res) => {
       address: user.address,
       profileImg: user.profileImg,
       isAdmin: user.isAdmin,
-      token: token,
     });
   } else {
     res.status(400).json({ message: 'Invalid user data' });
@@ -123,6 +131,9 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     user.profileImg = resolveUploadedImage(req, 'profileImg', user.profileImg);
 
     if (req.body.password) {
+      if (!isStrongPassword(req.body.password)) {
+        return res.status(400).json({ message: 'Password must have at least 8 characters and include a letter and number' });
+      }
       user.password = req.body.password;
     }
 
@@ -159,7 +170,7 @@ const deleteUser = asyncHandler(async (req, res) => {
 
   if (user) {
     if (user.isAdmin) {
-      res.status(400).json({ message: 'Can not delete admin user' });
+      return res.status(400).json({ message: 'Can not delete admin user' });
     }
     await User.deleteOne({ _id: user._id });
     res.json({ message: 'User removed' });
@@ -196,6 +207,9 @@ const updateUser = asyncHandler(async (req, res) => {
     user.isAdmin = parseBooleanField(req.body.isAdmin, user.isAdmin);
 
     if (req.body.password) {
+      if (!isStrongPassword(req.body.password)) {
+        return res.status(400).json({ message: 'Password must have at least 8 characters and include a letter and number' });
+      }
       user.password = req.body.password;
     }
 

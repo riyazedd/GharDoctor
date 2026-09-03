@@ -92,6 +92,16 @@ const bookingSchema = new mongoose.Schema(
   }
 );
 
+// The database, rather than a pre-insert query, is the authority on whether an
+// active provider slot can be reserved.
+bookingSchema.index(
+  { serviceProviderId: 1, date: 1, time: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: { $in: ['Scheduled', 'In Progress', 'Completed'] } },
+  }
+);
+
 const Booking = mongoose.model("Booking", bookingSchema);
 
 export default Booking;

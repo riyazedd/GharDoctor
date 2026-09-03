@@ -7,12 +7,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const uploadDir = path.join(__dirname, '..', 'uploads');
+const privateUploadDir = path.join(__dirname, '..', 'private-uploads');
 
 fs.mkdirSync(uploadDir, { recursive: true });
+fs.mkdirSync(privateUploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    cb(null, file.fieldname === 'citizenshipImage' ? privateUploadDir : uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
@@ -22,8 +24,14 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  if (!file.mimetype.startsWith('image/')) {
-    return cb(new Error('Only image uploads are allowed'));
+  const allowedTypes = new Map([
+    ['image/jpeg', '.jpg'],
+    ['image/png', '.png'],
+    ['image/webp', '.webp'],
+  ]);
+  const extension = path.extname(file.originalname).toLowerCase();
+  if (allowedTypes.get(file.mimetype) !== extension) {
+    return cb(new Error('Only JPEG, PNG, and WebP image uploads are allowed'));
   }
 
   cb(null, true);
@@ -34,6 +42,7 @@ const upload = multer({
   fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024,
+    files: 2,
   },
 });
 

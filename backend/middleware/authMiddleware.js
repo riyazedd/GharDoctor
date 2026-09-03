@@ -66,4 +66,40 @@ const protectProvider = asyncHandler(async (req, res, next) => {
   }
 });
 
-export { protect, admin, protectProvider };
+// Accept either account type and record the authenticated actor. This is used
+// for resources (such as bookings) that are shared by customers and providers.
+const protectAny = asyncHandler(async (req, res, next) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    res.status(401);
+    throw new Error('Not authorized, no token');
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId).select('-password');
+
+    if (user) {
+      req.user = user;
+      req.actor = { id: String(user._id), role: user.isAdmin ? 'admin' : 'user' };
+      return next();
+    }
+
+    const provider = await ServiceProvider.findById(decoded.userId).select('-password');
+    if (provider) {
+      req.provider = provider;
+      req.actor = { id: String(provider._id), role: 'provider' };
+      return next();
+    }
+
+    res.status(401);
+    throw new Error('Not authorized, account not found');
+  } catch (error) {
+    if (error.statusCode) throw error;
+    res.status(401);
+    throw new Error('Not authorized, token failed');
+  }
+});
+
+export { protect, admin, protectProvider, protectAny };

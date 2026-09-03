@@ -26,7 +26,6 @@ export default function LoginPage() {
       setSuccess('Login successful! Redirecting...');
       
       // Store user info (token is now in HTTP-Only cookie)
-      localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data));
       
       setTimeout(() => {
@@ -46,7 +45,6 @@ export default function LoginPage() {
         setSuccess('Login successful! Redirecting to provider dashboard...');
         
         // Store user info (token is now in HTTP-Only cookie)
-        localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data));
         
         setTimeout(() => {

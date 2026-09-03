@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, X, Save } from 'lucide-react';
-import { serviceAPI } from '../API';
+import { categoryAPI, serviceAPI } from '../API';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminHeader from '../components/AdminHeader';
 import { AdminLayoutProvider, useAdminLayout } from '../context/AdminLayoutContext';
@@ -9,6 +9,7 @@ import { useToast } from '../context/ToastContext';
 function ServiceManagementContent() {
   const toast = useToast();
   const [services, setServices] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,6 +34,7 @@ function ServiceManagementContent() {
 
   useEffect(() => {
     fetchServices();
+    fetchCategories();
     
     // Get user from localStorage
     const storedUser = localStorage.getItem('user');
@@ -52,6 +54,16 @@ function ServiceManagementContent() {
       setError('Failed to load services');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await categoryAPI.getAllCategories();
+      setCategories(Array.isArray(response.data) ? response.data : []);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+      setError('Failed to load categories');
     }
   };
 
@@ -225,7 +237,6 @@ function ServiceManagementContent() {
                       <th className="hidden sm:table-cell px-6 py-3 text-left font-semibold text-slate-300">Category</th>
                       <th className="hidden md:table-cell px-6 py-3 text-left font-semibold text-slate-300">Price</th>
                       <th className="hidden lg:table-cell px-6 py-3 text-left font-semibold text-slate-300">Duration</th>
-                      <th className="hidden lg:table-cell px-6 py-3 text-left font-semibold text-slate-300">Rating</th>
                       <th className="hidden sm:table-cell px-6 py-3 text-left font-semibold text-slate-300">Available</th>
                       <th className="px-3 sm:px-6 py-2 sm:py-3 text-center font-semibold text-slate-300">Actions</th>
                     </tr>
@@ -242,12 +253,6 @@ function ServiceManagementContent() {
                         <td className="hidden sm:table-cell px-6 py-4 text-slate-100">{service.category}</td>
                         <td className="hidden md:table-cell px-6 py-4 text-slate-100">Rs. {service.price}</td>
                         <td className="hidden lg:table-cell px-6 py-4 text-slate-100">{service.duration}</td>
-                        <td className="hidden lg:table-cell px-6 py-4 text-slate-100">
-                          <div className="flex items-center gap-1">
-                            <span>★</span>
-                            <span>{service.rating.toFixed(1)}</span>
-                          </div>
-                        </td>
                         <td className="hidden sm:table-cell px-6 py-4">
                           <span
                             className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${
@@ -336,14 +341,22 @@ function ServiceManagementContent() {
                 <label className="block text-sm font-medium text-slate-300 mb-1">
                   Category *
                 </label>
-                <input
-                  type="text"
+                <select
                   name="category"
                   value={formData.category}
                   onChange={handleInputChange}
-                  placeholder="e.g., Cleaning, Plumbing, Electrical"
                   className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                />
+                >
+                  <option value="">Select a category</option>
+                  {formData.category && !categories.some((category) => category.categoryName === formData.category) && (
+                    <option value={formData.category}>{formData.category}</option>
+                  )}
+                  {categories.map((category) => (
+                    <option key={category._id} value={category.categoryName}>
+                      {category.categoryName}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -376,22 +389,6 @@ function ServiceManagementContent() {
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
-                    Rating
-                  </label>
-                  <input
-                    type="number"
-                    name="rating"
-                    value={formData.rating}
-                    onChange={handleInputChange}
-                    min="0"
-                    max="5"
-                    step="0.1"
-                    className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                  />
-                </div>
-
                 <div className="flex items-end">
                   <div className="flex items-center gap-3 w-full">
                     <input
